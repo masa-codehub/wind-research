@@ -1,0 +1,789 @@
+github_issues_list:
+  milestones:
+    - id: "M1"
+      title: "コマンドラインインターフェースと基本設定 (EPIC-01)"
+      description: "CUIの基本的なやり取りとパラメータ処理を確立する。"
+    - id: "M2"
+      title: "データ取得パイプラインのコア実装 (EPIC-02, EPIC-03)"
+      description: "気象庁からのデータ取得、解析、主要なデータ変換ロジックを実装する。"
+    - id: "M3"
+      title: "データ出力と統合 (EPIC-04)"
+      description: "変換されたデータを統合し、CSVファイルとして出力する機能を完成させる。"
+    - id: "M4"
+      title: "運用支援とユーザビリティ向上 (EPIC-05)"
+      description: "進捗表示、ロギング、エラーハンドリングを強化し、ユーザーが安心して使えるようにする。"
+    - id: "M5"
+      title: "システム基盤と品質保証 (EPIC-06)"
+      description: "Docker対応、テスト戦略の実行、非機能要件の最終確認と調整を行う。"
+    - id: "MVP_Release"
+      title: "MVPリリース"
+      description: "主要なデータ取得・変換・出力機能が一通り動作し、ユーザーが価値を享受できる状態。"
+
+  labels:
+    type:
+      - "type:user-story"
+      - "type:technical-task"
+      - "type:bug"
+      - "type:chore"
+      - "type:refactoring"
+      - "type:test"
+      - "type:documentation"
+      - "type:discussion"
+    layer:
+      - "layer:domain"
+      - "layer:usecase"
+      - "layer:adapter-cui"
+      - "layer:adapter-web"
+      - "layer:adapter-file"
+      - "layer:infrastructure"
+    epic:
+      - "epic:EPIC-01"
+      - "epic:EPIC-02"
+      - "epic:EPIC-03"
+      - "epic:EPIC-04"
+      - "epic:EPIC-05"
+      - "epic:EPIC-06"
+    feature: # 具体的なフィーチャーラベル例 (必要に応じて追加)
+      - "feature:cli-params"
+      - "feature:html-parsing"
+      - "feature:data-conversion"
+      - "feature:csv-output"
+      - "feature:progress-display"
+      - "feature:logging"
+      - "feature:error-handling"
+      - "feature:docker"
+    ddd:
+      - "ddd:domain-modeling"
+      - "ddd:ubiquitous-language"
+      - "ddd:aggregate"
+      - "ddd:value-object"
+      - "ddd:domain-service"
+      - "ddd:domain-event"
+    priority:
+      - "priority:high"
+      - "priority:medium"
+      - "priority:low"
+    other:
+      - "TDD"
+      - "CA" # Clean Architecture
+      - "needs-discussion"
+      - "blocked"
+      - "good-first-issue"
+      - "python"
+      - "docker"
+
+  issues:
+    - id: "US-001_Issue" # GitHub Issue Title usually includes type and original ID
+      title: "[UserStory] コマンドラインからの必須パラメータ指定 (US-001)"
+      description: |
+        ユーザーストーリー US-001 を実装する。
+        > データ利用者として、コマンドラインから必須パラメータ（観測地点、期間）を指定して風況データ収集処理を開始したい。それは、特定の条件のデータを手軽に取得するためだ。
+      implementation_tasks:
+        - "[ ] `(Adapter-CUI)` コマンドライン引数パーサー（`argparse`）の基本的なセットアップを行う (TASK-001 と連携)"
+        - "[ ] `(Adapter-CUI)` 必須パラメータ（都道府県番号, 地点番号, 開始年月日, 取得期間）の引数定義を行う"
+        - "[ ] `(Adapter-CUI/UseCase)` 必須パラメータのバリデーションロジック（存在チェック、基本的な型チェック、日付フォーマット等）を実装する"
+        - "[ ] `(UseCase)` バリデーション済みパラメータを受け取り、後続の処理（現時点ではスタブでOK）を呼び出すエントリーポイントを作成する"
+        - "[ ] `(Adapter-CUI)` 必須パラメータに関するバリデーションエラー発生時、適切なエラーメッセージをCUIに表示し終了する処理を実装する"
+        - "[ ] `(Test)` 上記各機能に対するユニットテストを作成する (TDD)"
+      acceptance_criteria:
+        - "AC-001-01: コマンドラインで都道府県番号、地点番号、開始年月日、取得期間（日数または終了年月日）を指定してスクリプトを実行できる。"
+        - "AC-001-02: 指定された必須パラメータが正しく解釈され、データ取得処理が開始される（または後続処理のスタブが呼ばれる）。"
+        - "AC-001-03: 必須パラメータのいずれかが欠けている場合、適切なエラーメッセージが表示され、処理は開始されない。"
+        - "AC-001-04: パラメータの型やフォーマットが不正な場合（例：日付が不正）、エラーメッセージが表示され、処理は開始されない。"
+      related_requirement: "US-001 (参照元: FR-001-01, FR-001-03, UC-001)"
+      dependencies:
+        - "TASK-001_Issue"
+      milestone: "M1"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-01"
+        - "feature:cli-params"
+        - "layer:adapter-cui"
+        - "layer:usecase"
+        - "priority:high"
+        - "TDD"
+      notes: null
+
+    - id: "US-002_Issue"
+      title: "[UserStory] コマンドラインからのオプションパラメータ指定 (US-002)"
+      description: |
+        ユーザーストーリー US-002 を実装する。
+        > データ利用者として、コマンドラインからオプションパラメータ（データ取得間隔、出力ファイルパス）を指定したい。それは、取得プロセスをカスタマイズし、出力結果を管理しやすくするためだ。
+      implementation_tasks:
+        - "[ ] `(Adapter-CUI)` オプションパラメータ（データ取得間隔、出力ファイルパス）の引数定義を追加する (US-001のパーサーを拡張)"
+        - "[ ] `(Adapter-CUI/UseCase)` データ取得間隔のバリデーション（数値、下限3秒）を実装する。デフォルト値（5秒）を設定する。"
+        - "[ ] `(Adapter-CUI/UseCase)` 出力ファイルパスのバリデーション（文字列として妥当か）を実装する。デフォルト値の命名規則とパスを設定する。"
+        - "[ ] `(UseCase)` これらのオプション値を後続処理で利用できるようにする。"
+        - "[ ] `(Test)` オプションパラメータの解釈、バリデーション、デフォルト値設定に関するユニットテストを作成する (TDD)"
+      acceptance_criteria:
+        - "AC-002-01: データ取得間隔（秒数）をオプションで指定でき、システムはその間隔（下限3秒）を遵守する。指定がない場合はデフォルト5秒で動作する。"
+        - "AC-002-02: データ取得間隔が3秒未満で指定された場合、エラーメッセージを表示し処理を開始しない。"
+        - "AC-002-03: 出力CSVファイルパスをオプションで指定でき、処理結果がそのパスに保存される。指定がない場合はデフォルトの命名規則とパスで保存される。"
+      related_requirement: "US-002 (参照元: FR-001-02, FR-002-03)"
+      dependencies:
+        - "US-001_Issue"
+      milestone: "M1"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-01"
+        - "feature:cli-params"
+        - "layer:adapter-cui"
+        - "layer:usecase"
+        - "layer:infrastructure"
+        - "priority:medium"
+        - "TDD"
+      notes: null
+
+    - id: "US-003_Issue"
+      title: "[UserStory] ヘルプ情報の表示 (US-003)"
+      description: |
+        ユーザーストーリー US-003 を実装する。
+        > データ利用者として、コマンドラインオプションでツールのヘルプ情報を表示したい。それは、ツールの使い方や指定可能なパラメータを簡単に確認するためだ。
+      implementation_tasks:
+        - "[ ] `(Adapter-CUI)` コマンドライン引数パーサーにヘルプオプション (`-h`, `--help`) を設定し、自動生成されるヘルプメッセージをカスタマイズして必須・オプションパラメータの説明を充実させる (TASK-001 と連携)"
+        - "[ ] `(Test)` ヘルプオプション実行時の出力を検証するテストを作成する（可能であれば）"
+      acceptance_criteria:
+        - "AC-003-01: -h または --help オプションを指定して実行すると、利用可能なコマンドライン引数、オプション、およびそれらの説明がCUIに表示される。"
+        - "AC-003-02: ヘルプメッセージ表示後は、データ取得処理は実行されない。"
+      related_requirement: "US-003 (参照元: FR-001-04)"
+      dependencies:
+        - "TASK-001_Issue"
+      milestone: "M1"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-01"
+        - "feature:cli-params"
+        - "layer:adapter-cui"
+        - "priority:medium"
+        - "TDD"
+      notes: null
+
+    - id: "US-004_Issue"
+      title: "[UserStory] 気象庁データURL生成ロジックの実装 (US-004)"
+      description: |
+        ユーザーストーリー US-004 を実装する。
+        > システムとして、指定された観測地点と日付に基づき、気象庁ウェブサイトの正しいURLを動的に生成したい。それは、該当する風況データページへ確実にアクセスするためだ。
+      implementation_tasks:
+        - "[ ] `(UseCase/Domain)` 入力パラメータ（都道府県番号, 地点番号, 年月日）から気象庁の風況データページのURLを生成する関数/メソッドを実装する"
+        - "[ ] `(Domain)` URL生成に必要なパラメータ（ベースURL、クエリパラメータのキー名など）の管理方法を決定する（定数、シンプルな設定クラスなど）"
+        - "[ ] `(Test)` 様々な入力値に対して正しいURLが生成されることを検証するユニットテストを作成する (TDD)"
+      acceptance_criteria:
+        - "AC-004-01: 入力された都道府県番号、地点番号、年月日を基に、気象庁の風況データページのURLが正しく組み立てられる。"
+        - "AC-004-02: 期間指定（例: 2024年1月1日から3日間）の場合、各日付に対応するURLが順次生成されるロジックの基盤となること。"
+      related_requirement: "US-004 (参照元: FR-002-01, UC-001)"
+      dependencies:
+        - "US-001_Issue"
+      milestone: "M2"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-02"
+        - "feature:html-scraping"
+        - "layer:usecase"
+        - "layer:adapter-web"
+        - "layer:domain"
+        - "priority:high"
+        - "TDD"
+      notes: null
+
+    - id: "US-005_Issue"
+      title: "[UserStory] HTMLコンテンツ取得とリクエスト間隔制御 (US-005)"
+      description: |
+        ユーザーストーリー US-005 を実装する。
+        > システムとして、生成したURLから気象庁ウェブサイトのHTMLコンテンツを、指定された間隔を空けて取得したい。それは、風況データを抽出し、かつサイトに負荷をかけないためだ。
+      implementation_tasks:
+        - "[ ] `(Adapter-Web)` 指定されたURLからHTTP GETリクエストを送信し、HTMLコンテンツを取得する機能を実装する（TASK-002で選定したライブラリを使用）"
+        - "[ ] `(Infrastructure)` リクエスト送信前に指定されたデータ取得間隔（デフォルト5秒、下限3秒）の待機処理を実装する"
+        - "[ ] `(Adapter-Web/UseCase)` HTML取得時のネットワークエラーやHTTPエラー（4xx, 5xx）をハンドリングし、エラーをログに記録後、該当日の処理をスキップするロジックを実装する (TASK-004_Issue 依存)"
+        - "[ ] `(Test)` HTML取得機能（成功ケース、エラーケース）のユニットテストを作成する (TDD、外部アクセスはモック化)"
+        - "[ ] `(Test)` リクエスト間隔制御のテスト（ログや時間計測で確認）"
+      acceptance_criteria:
+        - "AC-005-01: 指定されたURLに対してHTTP GETリクエストが送信され、HTMLコンテンツが取得できる。"
+        - "AC-005-02: 連続して複数日のデータを取得する際、各リクエストの送信前に指定されたデータ取得間隔の待機時間が入る。"
+        - "AC-005-03: HTML取得時にネットワークエラーやHTTPエラーが発生した場合、エラーをログに記録し、該当日の処理はスキップされる（リトライはしない）。"
+      related_requirement: "US-005 (参照元: FR-002-02, FR-002-03, FR-002-04, UC-001)"
+      dependencies:
+        - "US-004_Issue"
+        - "TASK-002_Issue"
+        - "TASK-004_Issue"
+      milestone: "M2"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-02"
+        - "feature:html-scraping"
+        - "layer:adapter-web"
+        - "layer:infrastructure"
+        - "priority:high"
+        - "TDD"
+      notes: null
+
+    - id: "US-006_Issue"
+      title: "[UserStory] HTMLからの風況データ抽出 (US-006)"
+      description: |
+        ユーザーストーリー US-006 を実装する。
+        > システムとして、取得したHTMLコンテンツから10分毎の風況関連データ（時刻、風向文字列、風速文字列など）を正確に抽出したい。それは、後続の変換処理に必要な生データを得るためだ。
+      implementation_tasks:
+        - "[ ] `(Adapter-Web)` HTML内の風況データテーブルを特定するロジックを実装する（TASK-002で選定したライブラリを使用）"
+        - "[ ] `(Adapter-Web/Domain)` テーブルの各行から10分ごとの観測時刻、平均風向（文字列）、平均風速(m/s文字列)、最大瞬間風速(m/s文字列)、最大瞬間風速の風向（文字列）を抽出するロジックを実装する"
+        - "[ ] `(Domain)` 抽出した生データを保持するための単純なデータ構造（DTOや辞書など）を定義する"
+        - "[ ] `(Adapter-Web/UseCase)` データ項目が「///」（欠損）の場合の扱いを実装する (文字列として抽出)"
+        - "[ ] `(Adapter-Web/UseCase)` HTML構造が予期せぬ形式でデータ抽出に失敗した場合のエラーハンドリング（ログ記録、スキップ）を実装する (TASK-004_Issue 依存)"
+        - "[ ] `(Test)` サンプルHTMLを用いたデータ抽出ロジックのユニットテストを作成する (TDD)"
+        - "[ ] `(Test)` 欠損値や異常なHTML構造に対するテストケースを作成する"
+      acceptance_criteria:
+        - "AC-006-01: HTML内の正しいテーブル要素から、10分ごとの観測時刻、平均風向（文字列）、平均風速(m/s)、最大瞬間風速(m/s)、最大瞬間風速の風向（文字列）が抽出される。"
+        - "AC-006-02: データ項目が「///」（欠損）の場合も、その文字列として抽出される。"
+        - "AC-006-03: HTML構造が予期せぬ形式でデータ抽出に失敗した場合、エラーをログに記録し、該当日の処理はスキップされる。"
+      related_requirement: "US-006 (参照元: FR-003-01, FR-003-02, UC-001)"
+      dependencies:
+        - "US-005_Issue"
+        - "TASK-002_Issue"
+        - "TASK-004_Issue"
+      milestone: "M2"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-02"
+        - "feature:html-parsing"
+        - "layer:adapter-web"
+        - "layer:domain"
+        - "priority:high"
+        - "TDD"
+      notes: "[分割案あり] 実際のHTML構造の複雑さによって、テーブル特定ロジック、行パースロジック、各データ項目抽出ロジックに分割する。SP:5は大きめなので注意。"
+
+    - id: "US-007_Issue"
+      title: "[UserStory] 風向データの数値変換 (US-007)"
+      description: |
+        ユーザーストーリー US-007 を実装する。
+        > システムとして、抽出した文字列形式の風向データを、北を0度とする数値（角度）に変換したい。それは、データを分析しやすい形式にするためだ。
+      implementation_tasks:
+        - "[ ] `(Domain)` `WindDirectionValue` 値オブジェクトを実装する (TASK-005_Issue の一部)"
+        - "[ ] `(Domain)` 16方位文字列と角度（北=0, 北北東=22.5...）、および「静穏」「///」と-1.0のマッピングルールを定義する (TASK-006_Issue と連携)"
+        - "[ ] `(Domain/UseCase)` `WindDataConverterService` に風向文字列を `WindDirectionValue` (数値)に変換するロジックを実装する (TASK-006_Issue と連携)"
+        - "[ ] `(UseCase)` 未定義の風向文字列の場合のエラー/警告ログ処理と-1.0へのフォールバックを実装する (TASK-004_Issue 依存)"
+        - "[ ] `(Test)` 様々な風向文字列（正常系、静穏、欠損、未定義）に対する変換ロジックのユニットテストを作成する (TDD)"
+      acceptance_criteria:
+        - "AC-007-01: 16方位の風向文字列が、それぞれ定義済みの角度（float）に変換される。"
+        - "AC-007-02: 風向文字列が「静穏」の場合、数値 `-1.0` に変換される。"
+        - "AC-007-03: 風向文字列が「///」（欠損）の場合、数値 `-1.0` に変換される。"
+        - "AC-007-04: 上記以外の未定義の風向文字列が入力された場合、エラー（または警告）をログに記録し、数値 `-1.0` として扱われる。"
+      related_requirement: "US-007 (参照元: FR-004-01, FR-004-03, UC-001)"
+      dependencies:
+        - "US-006_Issue"
+        - "TASK-004_Issue"
+        - "TASK-005_Issue"
+        - "TASK-006_Issue"
+      milestone: "M2"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-03"
+        - "feature:data-conversion"
+        - "layer:domain"
+        - "layer:usecase"
+        - "ddd:value-object"
+        - "ddd:domain-service"
+        - "priority:high"
+        - "TDD"
+      notes: null
+
+    - id: "US-008_Issue"
+      title: "[UserStory] 風速データの数値変換 (US-008)"
+      description: |
+        ユーザーストーリー US-008 を実装する。
+        > システムとして、抽出した文字列形式の風速データを数値に変換したい。それは、データを分析しやすい形式にするためだ。
+      implementation_tasks:
+        - "[ ] `(Domain)` `WindSpeedValue` 値オブジェクトを実装する (TASK-005_Issue の一部)"
+        - "[ ] `(Domain/UseCase)` `WindDataConverterService` に風速文字列を `WindSpeedValue` (数値)に変換するロジックを実装する。「///」や数字以外の文字列は-1.0に変換する (TASK-006_Issue と連携)"
+        - "[ ] `(Test)` 様々な風速文字列（正常な数値、欠損「///」、数字以外）に対する変換ロジックのユニットテストを作成する (TDD)"
+      acceptance_criteria:
+        - "AC-008-01: 数字の風速文字列（例: 「10.5」）が、対応するfloat値（例: 10.5）に変換される。"
+        - "AC-008-02: 風速文字列が「///」（欠損）の場合、数値 `-1.0` に変換される。"
+        - "AC-008-03: その他の数字以外の風速文字列が入力された場合、数値 `-1.0` に変換される。"
+      related_requirement: "US-008 (参照元: FR-004-02, UC-001)"
+      dependencies:
+        - "US-006_Issue"
+        - "TASK-005_Issue"
+        - "TASK-006_Issue"
+      milestone: "M2"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-03"
+        - "feature:data-conversion"
+        - "layer:domain"
+        - "layer:usecase"
+        - "ddd:value-object"
+        - "ddd:domain-service"
+        - "priority:high"
+        - "TDD"
+      notes: null
+
+    - id: "US-009_Issue"
+      title: "[UserStory] 日次風況データの時系列統合 (US-009)"
+      description: |
+        ユーザーストーリー US-009 を実装する。
+        > システムとして、日毎に処理した10分毎の風況データを、指定された全期間にわたり時系列に統合したい。それは、期間全体の連続したデータセットを作成するためだ。
+      implementation_tasks:
+        - "[ ] `(UseCase/Domain)` 複数日分の処理済みデータ（`WindDataRecord`のリストまたは`DailyWindReport`のリスト）を保持し、最終的に観測日時順にソートして1つのデータセットにまとめるロジックを実装する"
+        - "[ ] `(Domain)` エラーでスキップされた日のデータ（日付・時刻のみで風況データは空欄）の表現方法を最終データセット内で統一する"
+        - "[ ] `(Test)` 複数日のデータ（正常データ、スキップデータ混在）が正しく統合・ソートされることを検証するユニットテストを作成する (TDD)"
+      acceptance_criteria:
+        - "AC-009-01: 複数日にまたがるデータが、観測日時の昇順に正しくソートされて統合される。"
+        - "AC-009-02: データ取得や解析エラーでスキップされた日のデータは、CSV上では日付・時刻列のみが記録され、他の風況データ項目は空欄（または指定の欠損値表現）として統合される。"
+      related_requirement: "US-009 (参照元: FR-005-01, UC-001)"
+      dependencies:
+        - "US-007_Issue"
+        - "US-008_Issue"
+      milestone: "M3"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-04"
+        - "feature:data-aggregation"
+        - "layer:usecase"
+        - "layer:domain"
+        - "priority:medium"
+        - "TDD"
+      notes: null
+
+    - id: "US-010_Issue"
+      title: "[UserStory] 統合データのCSVファイル出力 (US-010)"
+      description: |
+        ユーザーストーリー US-010 を実装する。
+        > データ利用者として、処理・統合された風況データをUTF-8エンコーディングのCSVファイルとして出力してほしい。それは、様々な分析ツールで容易に利用できる標準的な形式だからだ。
+      implementation_tasks:
+        - "[ ] `(Adapter-File)` 統合されたデータセットをCSV形式でファイルに書き出す機能を実装する (Pythonの`csv`モジュールや`pandas`の`to_csv`など)"
+        - "[ ] `(Adapter-File)` 出力ファイルの文字エンコーディングをUTF-8に指定する"
+        - "[ ] `(Adapter-File)` CSVのヘッダー行（英語）を定義し、出力する"
+        - "[ ] `(Adapter-File)` スキップされた日のデータ項目を空欄で出力する処理を実装する"
+        - "[ ] `(Adapter-File)` 出力ファイルパスが指定されていない場合のデフォルトパス・ファイル名生成ロジックを実装する"
+        - "[ ] `(Adapter-File)` 同名ファイル存在時の別名保存ロジック（例: `filename(1).csv`）を実装する"
+        - "[ ] `(Adapter-File/UseCase)` ファイル書き込みエラー（権限、ディスク容量）のハンドリングとCUI/ログへのエラー情報出力を実装する (TASK-004_Issue 依存)"
+        - "[ ] `(Test)` CSV出力機能のユニットテスト・結合テストを作成する (TDD、ファイルI/Oは適切に扱う)"
+      acceptance_criteria:
+        - "AC-010-01: 統合データが、指定された（またはデフォルトの）ファイルパスにCSVファイルとして保存される。"
+        - "AC-010-02: CSVファイルの文字エンコーディングはUTF-8である。"
+        - "AC-010-03: CSVファイルの1行目には、定義された英語のヘッダー行が出力される。"
+        - "AC-010-04: 各データ行は、観測日時、平均風向（数値）、平均風速、最大瞬間風速の風向（数値）、最大瞬間風速の順でカンマ区切りで出力される。"
+        - "AC-010-05: スキップされた日のデータは、CSV上で日付・時刻列は記録され、他の風況データ項目は空欄で出力される。"
+        - "AC-010-06: 出力先に同名のCSVファイルが既に存在する場合、ファイル名の末尾に連番を付与するなどの方法で別名 (`filename(1).csv`など) で保存される。"
+        - "AC-010-07: ファイル書き込み権限がない場合やディスク容量不足の場合、適切なエラーメッセージがCUIに表示され、処理は終了する。エラーはログにも記録される。"
+      related_requirement: "US-010 (参照元: FR-006-01~05, UC-001)"
+      dependencies:
+        - "US-009_Issue"
+        - "TASK-004_Issue"
+      milestone: "M3"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-04"
+        - "feature:csv-output"
+        - "layer:adapter-file"
+        - "layer:usecase"
+        - "priority:high"
+        - "TDD"
+      notes: null
+
+    - id: "US-011_Issue"
+      title: "[UserStory] CUIでの処理進捗表示 (US-011)"
+      description: |
+        ユーザーストーリー US-011 を実装する。
+        > データ利用者として、長時間のデータ取得・処理中に、現在の処理状況（処理中の日付と残り日数）をCUIで確認したい。それは、処理がどの程度進んでいるか把握し、安心して待つためだ。
+      implementation_tasks:
+        - "[ ] `(Adapter-CUI/UseCase)` 処理の主要なステップ（開始、日次処理ごと、完了）でCUIにメッセージを出力するロジックを実装する"
+        - "[ ] `(UseCase)` 現在処理中の日付と総日数から残り日数を計算するロジックを実装する"
+        - "[ ] `(Adapter-CUI)` CUI表示のフォーマットを決定し、実装する（例: `Processing YYYY-MM-DD (Day X of Y, Z days remaining)...`）"
+        - "[ ] `(Test)` 進捗表示ロジックのテスト（表示内容、更新タイミング）を作成する"
+      acceptance_criteria:
+        - "AC-011-01: システム起動後、処理開始を示すメッセージがCUIに表示される。"
+        - "AC-011-02: 1日分のデータ処理が完了するごとに、現在処理中の日付と、総日数のうち残りの日数がCUIに表示され、情報が更新される。"
+        - "AC-011-03: 全ての処理が完了後、処理完了を示すメッセージと出力されたCSVファイルパスがCUIに表示される。"
+      related_requirement: "US-011 (参照元: FR-007-01, FR-007-02, FR-007-03)"
+      dependencies:
+        - "US-001_Issue" # 処理全体のフローに組み込む
+      milestone: "M4"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-05"
+        - "feature:progress-display"
+        - "layer:adapter-cui"
+        - "layer:usecase"
+        - "priority:medium"
+      notes: null
+
+    - id: "US-012_Issue"
+      title: "[UserStory] エラー発生時のCUI通知とログ確認促進 (US-012)"
+      description: |
+        ユーザーストーリー US-012 を実装する。
+        > データ利用者として、処理中にエラーが発生した場合、その旨をCUIで把握し、さらに詳細なエラー情報をログファイルで確認したい。それは、問題の原因を特定し、必要に応じて再実行や開発者へのフィードバックを行うためだ。
+      implementation_tasks:
+        - "[ ] `(UseCase/Adapter-CUI)` 各種エラー発生箇所で、概要を示すエラーメッセージをCUIに出力する処理を実装する"
+        - "[ ] `(UseCase/Adapter-File)` エラー発生時に詳細情報（日時、エラー内容、対象日など）をログファイルに記録する処理を確実にする (TASK-004_Issueと連携)"
+        - "[ ] `(UseCase/Adapter-CUI)` 処理完了時に、エラーログの有無を確認し、エラーがあった場合にログファイルの確認を促すメッセージをCUIに表示する処理を実装する"
+        - "[ ] `(Test)` エラー発生時のCUIメッセージとログ確認促進メッセージの表示を検証するテストを作成する"
+      acceptance_criteria:
+        - "AC-012-01: HTML取得エラー、HTML解析エラー、CSV出力エラーなどが発生した場合、概要を示すエラーメッセージがCUIに表示される。"
+        - "AC-012-02: 発生したエラーの詳細（日時、エラー内容、対象日など）がログファイルに記録される。"
+        - "AC-012-03: 処理完了時に、エラーが1件以上ログに記録されていた場合、ログファイルの確認を促すメッセージがCUIに表示される（エラーがなければ表示されない）。"
+      related_requirement: "US-012 (参照元: FR-007-04, FR-008-01)"
+      dependencies:
+        - "TASK-004_Issue"
+      milestone: "M4"
+      labels:
+        - "type:user-story"
+        - "epic:EPIC-05"
+        - "feature:logging"
+        - "feature:error-handling"
+        - "layer:adapter-cui"
+        - "layer:adapter-file"
+        - "layer:usecase"
+        - "priority:medium"
+      notes: null
+
+  technical_tasks:
+    - id: "TASK-001_Issue"
+      title: "[TechnicalTask] コマンドライン引数解析基盤の実装 (TASK-001)"
+      description: |
+        Pythonの `argparse` ライブラリ（または同等のもの）を導入し、コマンドライン引数・オプションを定義・解析するための基本的な枠組みをセットアップする。
+        これは US-001, US-002, US-003 の基盤となる。
+      implementation_tasks:
+        - "[ ] `(Infrastructure/Adapter-CUI)` `argparse` を用いた引数パーサーの初期化"
+        - "[ ] `(Infrastructure/Adapter-CUI)` 引数定義の基本的な構造作成（後でUSごとに引数を追加）"
+        - "[ ] `(Test)` 基本的なパーサーの動作確認テスト"
+      acceptance_criteria:
+        - "`argparse` がプロジェクトに導入され、基本的な引数なしでの実行や、存在しないオプション指定時の標準エラー出力が機能すること。"
+        - "今後の引数追加が容易な構造であること。"
+      related_requirement: "TASK-001 (参照元: FR-001, NFR-013)"
+      dependencies: null
+      milestone: "M1"
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-01"
+        - "layer:adapter-cui"
+        - "layer:infrastructure"
+        - "priority:high"
+      notes: null
+
+    - id: "TASK-002_Issue"
+      title: "[TechnicalTask] HTML解析ライブラリの選定と導入 (TASK-002)"
+      description: |
+        HTML解析に使用するPythonライブラリ（例: `pandas.read_html`, `Beautiful Soup` + `requests`）を調査・選定し、プロジェクトに導入する。
+        選定基準は、安定性・確実性を重視しつつ、迅速かつ簡単な実装が可能であること。
+      implementation_tasks:
+        - "[ ] `(Infrastructure/Adapter-Web)` 候補ライブラリの機能比較、サンプルHTMLでのパース精度・容易性の評価 (PoC)"
+        - "[ ] `(Infrastructure/Adapter-Web)` 選定したライブラリをプロジェクトの依存関係に追加"
+        - "[ ] `(Documentation)` 選定理由と基本的な使い方をドキュメント化（開発者向け）"
+      acceptance_criteria:
+        - "対象の気象庁HTMLページ構造に対して、最も適切（安定性、メンテ性、実装速度のバランス）と思われるライブラリが選定され、導入されること。"
+        - "簡単なサンプルHTMLからのデータ抽出が選定ライブラリで可能であることが確認できること。"
+      related_requirement: "TASK-002 (参照元: 技術的制約)"
+      dependencies: null
+      milestone: "M2"
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-02"
+        - "layer:adapter-web"
+        - "layer:infrastructure"
+        - "priority:high"
+        - "needs-discussion"
+      notes: "[分割案あり] PoC (Proof of Concept) を行い、対象HTMLの構造に対して各ライブラリの適合性を評価するタスクを先行させてもよい。"
+
+    - id: "TASK-003_Issue"
+      title: "[TechnicalTask] Docker環境構築 (TASK-003)"
+      description: |
+        Python実行環境と必要な依存モジュールを含むDockerfileを作成し、Dockerイメージをビルド可能にする。
+        開発環境と実行環境の差異をなくし、デプロイを容易にする。
+      implementation_tasks:
+        - "[ ] `(Infrastructure)` ベースとなるPythonのDockerイメージを選定"
+        - "[ ] `(Infrastructure)` `requirements.txt` 等で依存モジュールを管理し、Dockerfile内で `pip install` するように記述"
+        - "[ ] `(Infrastructure)` スクリプト実行のためのエントリーポイントや作業ディレクトリを設定"
+        - "[ ] `(Test/Documentation)` Dockerイメージのビルドとコンテナ実行手順を検証・ドキュメント化"
+      acceptance_criteria:
+        - "`docker build` コマンドでイメージが正常にビルドできること。"
+        - "ビルドされたイメージからコンテナを起動し、サンプルスクリプト（または本システムの一部）が実行できること。"
+      related_requirement: "TASK-003 (参照元: 技術的制約, NFR-016)"
+      dependencies: null # (ただし、依存モジュールがある程度固まってからが効率的)
+      milestone: "M5" # (初期段階から着手し、継続的に改善)
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-06"
+        - "layer:infrastructure"
+        - "docker"
+        - "priority:medium"
+      notes: null
+
+    - id: "TASK-004_Issue"
+      title: "[TechnicalTask] ロギング基盤の実装 (TASK-004)"
+      description: |
+        Pythonの `logging` モジュール等を利用して、柔軟なロギング機能を実装する。
+        ログレベル設定、フォーマット、ファイル出力（実行ファイルやCSVと同じ場所）、エラー発生時の情報記録を確実に行う。
+      implementation_tasks:
+        - "[ ] `(Infrastructure/Adapter-File)` `logging`モジュールの設定（フォーマッタ、ハンドラ）"
+        - "[ ] `(Infrastructure)` ログレベル（DEBUG, INFO, WARNING, ERROR）の定義と、コマンドラインからの設定機能（オプション）"
+        - "[ ] `(Infrastructure/Adapter-File)` ログファイルの出力先ディレクトリと命名規則の決定・実装"
+        - "[ ] `(UseCase)` 各処理モジュールからログ出力を行うためのインターフェースまたは共通関数の提供"
+        - "[ ] `(Test)` ログ出力内容、レベル、フォーマットのユニットテスト"
+      acceptance_criteria:
+        - "INFOレベル以上のログが指定されたファイルに記録されること。"
+        - "コマンドラインオプションでDEBUGレベルのログが出力されるよう変更できること。"
+        - "エラー発生時に、スタックトレースを含む詳細な情報がERRORレベルで記録されること。"
+        - "ログローテーションは初期スコープ外。"
+      related_requirement: "TASK-004 (参照元: FR-008, NFR-015)"
+      dependencies:
+        - "US-001_Issue" # (コマンドラインオプション)
+      milestone: "M4" # (ただし、エラーハンドリングのため早期に必要)
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-05"
+        - "feature:logging"
+        - "layer:adapter-file"
+        - "layer:infrastructure"
+        - "priority:high"
+      notes: "ログローテーション機能（FR-008-03検討）は初期リリースでは見送り、必要に応じて別タスクとする。"
+
+    - id: "TASK-005_Issue"
+      title: "[TechnicalTask] ドメインモデルクラス実装 (TASK-005)"
+      description: |
+        要件定義書で定義されたドメインモデル（`WindDataRecord`, `DailyWindReport`, 各ValueObjectなど）のPythonクラスを実装する。
+        不変性、バリデーションロジック、等価性比較などを適切に実装する。TDDで進める。
+      implementation_tasks:
+        - "[ ] `(Domain)` `ObservationPointValue` (都道府県番号, 地点番号) の実装とテスト"
+        - "[ ] `(Domain)` `DateTimeRangeValue` (期間) の実装とテスト"
+        - "[ ] `(Domain)` `WindDirectionValue` (風向: 角度, 元文字列) の実装とテスト"
+        - "[ ] `(Domain)` `WindSpeedValue` (風速: m/s) の実装とテスト"
+        - "[ ] `(Domain)` `WindDataRecord` (10分毎の観測データ) エンティティの実装とテスト"
+        - "[ ] `(Domain)` `DailyWindReport` (日次レポート、集約ルート) エンティティの実装とテスト"
+        - "[ ] `(Domain)` 上記クラス間の関連性、不変条件を実装に反映"
+      acceptance_criteria:
+        - "各クラスがドメインモデル定義に従って属性と振る舞いを持つ。"
+        - "ValueObjectは不変であり、内容に基づいた等価性比較が実装されている。"
+        - "Entityは識別子を持ち、状態変更のロジックが適切にカプセル化されている。"
+        - "全てのユニットテストが成功する。"
+      related_requirement: "TASK-005 (参照元: ドメインモデル_初期案)"
+      dependencies: null
+      milestone: "M2"
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-03"
+        - "layer:domain"
+        - "ddd:domain-modeling"
+        - "ddd:aggregate"
+        - "ddd:value-object"
+        - "priority:high"
+        - "TDD"
+      notes: "TDDで開発を進める。"
+
+    - id: "TASK-006_Issue"
+      title: "[TechnicalTask] 風向・風速変換ドメインサービス実装 (TASK-006)"
+      description: |
+        `WindDataConverterService` を実装し、文字列形式の風向・風速データをドメインモデルの `WindDirectionValue` および `WindSpeedValue` オブジェクトに変換するロジックを提供する。
+      implementation_tasks:
+        - "[ ] `(Domain)` `WindDataConverterService` クラス（または関数群）のインターフェース定義"
+        - "[ ] `(Domain)` 風向変換ロジック（16方位・静穏・欠損から角度へ）の実装"
+        - "[ ] `(Domain)` 風速変換ロジック（数値・欠損・非数値から数値へ）の実装"
+        - "[ ] `(Test)` 様々な入力文字列に対する変換サービスのユニットテスト作成 (TDD)"
+      acceptance_criteria:
+        - "文字列の風向・風速が、定義された変換ルールに従って正しく対応するValueObjectに変換される。"
+        - "不正な入力や未定義の入力に対するフォールバック処理（例: -1.0設定、ログ記録）が機能する。"
+        - "全てのユニットテストが成功する。"
+      related_requirement: "TASK-006 (参照元: ドメインモデル_初期案, FR-004)"
+      dependencies:
+        - "TASK-005_Issue"
+      milestone: "M2"
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-03"
+        - "layer:domain"
+        - "ddd:domain-service"
+        - "priority:high"
+        - "TDD"
+      notes: "16方位のマッピングテーブルなど、設定データはコード内に持つか、読みやすい形で管理する。"
+
+    - id: "TASK-007_Issue"
+      title: "[TechnicalTask] 性能検証の実施 (TASK-007)"
+      description: |
+        1年分のデータ取得・処理の性能を検証する。処理時間を計測し、ボトルネックがあれば特定する。
+        スタックしないこと（タイムアウト機構の検討含む）も確認する。
+      implementation_tasks:
+        - "[ ] `(Test/Infrastructure)` 性能検証用のテストデータセット（または実データでの実行手順）準備"
+        - "[ ] `(Test/Infrastructure)` 処理時間計測スクリプトまたはツールの準備"
+        - "[ ] `(Test/Infrastructure)` 1年分のデータ処理を実行し、全体の処理時間と日毎の処理時間を記録"
+        - "[ ] `(Test/Infrastructure)` 1日分の処理に対するタイムアウト機構の検討と、必要であれば簡易的な実装・テスト"
+        - "[ ] `(Documentation)` 検証結果とボトルネック分析、改善提案をまとめる"
+      acceptance_criteria:
+        - "1年分のデータ処理が「現実的な時間内」で完了する（具体的な目標値はPOと協議）。"
+        - "特定の日の処理で異常に長時間スタックしない。タイムアウト機構が機能し、エラーとしてスキップ処理に移行できること。"
+        - "ボトルネックがあれば特定され、改善の方向性が示される。"
+      related_requirement: "TASK-007 (参照元: NFR-001)"
+      dependencies: # 主要な機能がほぼ実装完了後
+        - "US-010_Issue"
+      milestone: "M5"
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-06"
+        - "type:test"
+        - "layer:usecase"
+        - "layer:adapter-web"
+        - "layer:infrastructure"
+        - "priority:medium"
+      notes: null
+
+    - id: "TASK-008_Issue"
+      title: "[TechnicalTask] 気象庁利用規約・robots.txt確認 (TASK-008)"
+      description: |
+        気象庁ウェブサイトの利用規約および `robots.txt` を確認し、本システムがこれらを遵守している設計であることを確認する。
+      implementation_tasks:
+        - "[ ] `(Documentation/Chore)` 気象庁の関連ページを調査"
+        - "[ ] `(Documentation/Chore)` `robots.txt` を確認し、アクセス制限があればシステム設計に反映（特にスクレイピング対象パス）"
+        - "[ ] `(Documentation/Chore)` 確認結果と、システムが規約を遵守するための注意点を開発チーム内で共有"
+      acceptance_criteria:
+        - "利用規約と `robots.txt` の内容が確認され、システム設計への影響が評価されること。"
+        - "遵守事項があれば開発チームに周知されること。"
+      related_requirement: "TASK-008 (参照元: 制約条件, NFR-005)"
+      dependencies: null
+      milestone: "M2" # (開発初期に実施)
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-02"
+        - "epic:EPIC-06"
+        - "type:chore"
+        - "layer:adapter-web"
+        - "priority:high"
+      notes: "開発初期に実施。"
+
+    - id: "TASK-009_Issue"
+      title: "[TechnicalTask] 包括的なテスト戦略と実装 (TASK-009) - メタIssue"
+      description: |
+        ユニットテスト、結合テスト、受け入れテスト（E2E）を含む包括的なテスト戦略を策定し、主要なテストケースを実装する。
+        TDDの原則に従い、カバレッジ向上を目指す。
+        **このIssueはメタIssueとし、具体的なテスト実装はサブタスクIssueとして作成・管理する。**
+      implementation_tasks:
+        - "[ ] テスト戦略ドキュメントの作成（テストの種類、範囲、ツール、カバレッジ目標など）"
+        - "[ ] ユニットテスト実装 (詳細はサブタスクIssueへ)"
+        - "[ ] 結合テスト実装 (詳細はサブタスクIssueへ)"
+        - "[ ] E2Eテスト実装 (詳細はサブタスクIssueへ)"
+        - "[ ] CI環境でのテスト自動実行設定"
+      acceptance_criteria:
+        - "テスト戦略が定義され、チームで合意されていること。"
+        - "定義されたテストが実装され、CIで実行されていること。"
+        - "テストカバレッジが目標値を満たしていること。"
+      related_requirement: "TASK-009 (参照元: NFR-010, NFR-011, NFR-012)"
+      dependencies: null # 各機能の実装に依存
+      milestone: "M5" # (各機能開発と並行して進める)
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-06"
+        - "type:test"
+        - "priority:high"
+        - "TDD"
+      notes: "[分割必須] このIssueはテスト全体の計画と管理。具体的なテスト実装は、例えば TASK-009-Unit-Domain, TASK-009-Integration-Pipeline のように個別のIssueを作成する。"
+
+    - id: "DISC-001_Issue"
+      title: "[Discussion] CSV空欄表現の具体化"
+      description: |
+        「補足_確認_検討事項」のNo.1より。
+        エラーでスキップされた日のデータ項目をCSVファイル上で「空欄」と表現する際の具体的な方法を決定する。
+      implementation_tasks:
+        - "[ ] `,,` のように値がない状態とするか、`\"\"` のように空文字列を明示的に入れるか、`NaN` や `-1` (既存の欠損値と同じ) を使うかなどを検討。"
+        - "[ ] Pandas等、使用するCSV書き出しライブラリのデフォルト挙動を確認。"
+        - "[ ] データ利用者が最も扱いやすい形式を選択する。"
+      acceptance_criteria:
+        - "CSVの空欄表現の仕様が明確に定義されること。"
+        - "US-010_Issue (CSV出力) の実装に反映されること。"
+      related_requirement: "補足1"
+      dependencies: null
+      milestone: "M3"
+      labels:
+        - "type:discussion"
+        - "epic:EPIC-04"
+        - "feature:csv-output"
+        - "needs-discussion"
+        - "priority:medium"
+      notes: null
+
+    - id: "DISC-002_Issue"
+      title: "[Discussion] CSV別名保存の命名規則決定"
+      description: |
+        「補足_確認_検討事項」のNo.2より。
+        同名のCSVファイルが既に存在する場合の「別名で保存」の具体的な命名規則を決定する。
+      implementation_tasks:
+        - "[ ] `filename(1).csv`, `filename(2).csv` のような連番方式で良いか検討。"
+        - "[ ] タイムスタンプを付与する方式（例: `filename_YYYYMMDDHHMMSS.csv`）も比較検討。"
+        - "[ ] 実装の容易性とユーザーの分かりやすさを考慮して決定する。"
+      acceptance_criteria:
+        - "別名保存時の命名規則が明確に定義されること。"
+        - "US-010_Issue (CSV出力) の実装に反映されること。"
+      related_requirement: "補足2"
+      dependencies: null
+      milestone: "M3"
+      labels:
+        - "type:discussion"
+        - "epic:EPIC-04"
+        - "feature:csv-output"
+        - "needs-discussion"
+        - "priority:medium"
+      notes: null
+
+    - id: "DISC-003_Issue"
+      title: "[Discussion] 1日分処理のスタック時タイムアウト値検討"
+      description: |
+        「補足_確認_検討事項」のNo.3より。
+        非機能要件NFR-001における「スタックしたと判断される場合（例: タイムアウト設定）」の具体的なタイムアウト値を検討する。
+      implementation_tasks:
+        - "[ ] 1日分のHTML取得と解析にかかる通常の時間を概算。"
+        - "[ ] ネットワーク遅延なども考慮し、現実的なタイムアウト値を設定（例: 5分、10分など）。"
+        - "[ ] タイムアウト発生時のログ内容、ユーザーへの通知方法も併せて検討。"
+      acceptance_criteria:
+        - "1日分の処理に対するタイムアウト値の目安が設定されること。"
+        - "NFR-001 (性能) の実装・検証に反映されること。"
+      related_requirement: "補足3"
+      dependencies: null
+      milestone: "M5"
+      labels:
+        - "type:discussion"
+        - "epic:EPIC-06"
+        - "feature:error-handling"
+        - "needs-discussion"
+        - "priority:medium"
+      notes: null
+
+    - id: "DISC-004_Issue"
+      title: "[Discussion] ログレベル設定方法の具体化"
+      description: |
+        「補足_確認_検討事項」のNo.4より。
+        機能要件FR-008-02「ログレベル設定可能」の具体的な設定方法を決定する。
+      implementation_tasks:
+        - "[ ] コマンドラインオプション（例: `--loglevel DEBUG`）で指定する方式で良いか確認。"
+        - "[ ] 対応するログレベルの名称（DEBUG, INFO, WARNING, ERRORなど）を定義。"
+      acceptance_criteria:
+        - "ログレベルの設定方法が明確に定義されること。"
+        - "TASK-004_Issue (ロギング基盤実装) に反映されること。"
+      related_requirement: "補足4"
+      dependencies: null
+      milestone: "M4"
+      labels:
+        - "type:discussion"
+        - "epic:EPIC-05"
+        - "feature:logging"
+        - "needs-discussion"
+        - "priority:low"
+      notes: null
+
+    - id: "DISC-005_Issue"
+      title: "[Discussion] HTML構造変更時のエラーメッセージ具体化"
+      description: |
+        「補足_確認_検討事項」のNo.5より。
+        HTML構造変更でデータ抽出に失敗した場合にユーザーに表示するCUIおよびログのメッセージ内容を具体的にする。
+      implementation_tasks:
+        - "[ ] ユーザーが原因を推測しやすく、かつ開発者がデバッグしやすい情報を含むメッセージ案を作成。"
+        - "  (例: `エラー: [YYYY-MM-DD]のデータ抽出に失敗しました。気象庁サイトのページ構成が変更された可能性があります。詳細はログファイル [ログファイルパス] をご確認ください。`)"
+        - "[ ] ログには、どの要素が見つからなかったかなど、より技術的な詳細を含めることを検討。"
+      acceptance_criteria:
+        - "HTML構造変更に起因するデータ抽出失敗時のエラーメッセージ（CUI/ログ）のテンプレートが定義されること。"
+        - "US-006_Issue (HTML抽出)、US-012_Issue (エラー通知) の実装に反映されること。"
+      related_requirement: "補足5"
+      dependencies: null
+      milestone: "M4"
+      labels:
+        - "type:discussion"
+        - "epic:EPIC-02"
+        - "epic:EPIC-05"
+        - "feature:error-handling"
+        - "needs-discussion"
+        - "priority:medium"
+      notes: null
