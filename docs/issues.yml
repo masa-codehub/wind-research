@@ -514,11 +514,11 @@ github_issues_list:
         Pythonの `logging` モジュール等を利用して、柔軟なロギング機能を実装する。
         ログレベル設定、フォーマット、ファイル出力（実行ファイルやCSVと同じ場所）、エラー発生時の情報記録を確実に行う。
       implementation_tasks:
-        - "[ ] `(Infrastructure/Adapter-File)` `logging`モジュールの設定（フォーマッタ、ハンドラ）"
-        - "[ ] `(Infrastructure)` ログレベル（DEBUG, INFO, WARNING, ERROR）の定義と、コマンドラインからの設定機能（オプション）"
-        - "[ ] `(Infrastructure/Adapter-File)` ログファイルの出力先ディレクトリと命名規則の決定・実装"
-        - "[ ] `(UseCase)` 各処理モジュールからログ出力を行うためのインターフェースまたは共通関数の提供"
-        - "[ ] `(Test)` ログ出力内容、レベル、フォーマットのユニットテスト"
+        - "[x] `(Infrastructure/Adapter-File)` ロギング設定関数(`setup_logging`)を実装し、フォーマッタとハンドラ（コンソール、ファイル）を設定"
+        - "[x] `(Infrastructure)` ログレベル（DEBUG, INFO, WARNING, ERROR, CRITICAL）を定義し、コマンドライン引数 `--loglevel` で設定可能にするインターフェースを実装"
+        - "[x] `(Infrastructure/Adapter-File)` ログファイルをカレントディレクトリに固定ファイル名(`wind-research.log`)で出力する仕様を実装"
+        - "[x] `(UseCase)` 各モジュールが `logging.getLogger(__name__)` を通じて設定済みロガーを取得できる標準的な方法を提供"
+        - "[x] `(Test)` ログレベル設定、ファイルへのログ出力、スタックトレースの記録を含むユニットテストを実装"
       acceptance_criteria:
         - "INFOレベル以上のログが指定されたファイルに記録されること。"
         - "コマンドラインオプションでDEBUGレベルのログが出力されるよう変更できること。"
