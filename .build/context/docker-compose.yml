@@ -1,5 +1,5 @@
 services:
-  github-auto-setup:
+  wind-research:
     build:
       context: ./${PROJECT_NAME}/.build
       dockerfile: Dockerfile
