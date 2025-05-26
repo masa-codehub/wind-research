@@ -442,9 +442,9 @@ github_issues_list:
         Pythonの `argparse` ライブラリ（または同等のもの）を導入し、コマンドライン引数・オプションを定義・解析するための基本的な枠組みをセットアップする。
         これは US-001, US-002, US-003 の基盤となる。
       implementation_tasks:
-        - "[ ] `(Infrastructure/Adapter-CUI)` `argparse` を用いた引数パーサーの初期化"
-        - "[ ] `(Infrastructure/Adapter-CUI)` 引数定義の基本的な構造作成（後でUSごとに引数を追加）"
-        - "[ ] `(Test)` 基本的なパーサーの動作確認テスト"
+        - "[x] `(Infrastructure/Adapter-CUI)` `argparse` を用いた引数パーサーの初期化"
+        - "[x] `(Infrastructure/Adapter-CUI)` 引数定義の基本的な構造作成（後でUSごとに引数を追加）"
+        - "[x] `(Test)` 基本的なパーサーの動作確認テスト"
       acceptance_criteria:
         - "`argparse` がプロジェクトに導入され、基本的な引数なしでの実行や、存在しないオプション指定時の標準エラー出力が機能すること。"
         - "今後の引数追加が容易な構造であること。"
@@ -457,7 +457,10 @@ github_issues_list:
         - "layer:adapter-cui"
         - "layer:infrastructure"
         - "priority:high"
-      notes: null
+      notes: |
+        [申し送り事項]
+        - US-001, US-002, US-003の実装者へ: 引数の追加は `src/app/adapters/cui/argument_parser.py` に `parser.add_argument(...)` を追記して行います。
+        - TASK-004 (ロギング基盤) の実装者へ: `main.py` のエラー処理部にある `print()` は、将来的にロガー呼び出しに置き換えてください。
 
     - id: "TASK-002_Issue"
       title: "[TechnicalTask] HTML解析ライブラリの選定と導入 (TASK-002)"
