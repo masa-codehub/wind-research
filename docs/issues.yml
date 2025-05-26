@@ -462,7 +462,7 @@ github_issues_list:
     - id: "TASK-002_Issue"
       title: "[TechnicalTask] HTML解析ライブラリの選定と導入 (TASK-002)"
       description: |
-        HTML解析に使用するPythonライブラリ（例: `pandas.read_html`, `Beautiful Soup` + `requests`）を調査・選定し、プロジェクトに導入する。
+        HTML解析に使用するPythonライブラリ（`pandas.read_html`, `Beautiful Soup` + `requests` + `lxml` 等）を調査・選定し、プロジェクトに導入する。
         選定基準は、安定性・確実性を重視しつつ、迅速かつ簡単な実装が可能であること。
       implementation_tasks:
         - "[ ] `(Infrastructure/Adapter-Web)` 候補ライブラリの機能比較、サンプルHTMLでのパース精度・容易性の評価 (PoC)"
@@ -488,11 +488,12 @@ github_issues_list:
       description: |
         Python実行環境と必要な依存モジュールを含むDockerfileを作成し、Dockerイメージをビルド可能にする。
         開発環境と実行環境の差異をなくし、デプロイを容易にする。
+        依存関係は `pip-tools` を用いて `requirements.in/txt` で管理する。
       implementation_tasks:
-        - "[ ] `(Infrastructure)` ベースとなるPythonのDockerイメージを選定"
-        - "[ ] `(Infrastructure)` `requirements.txt` 等で依存モジュールを管理し、Dockerfile内で `pip install` するように記述"
-        - "[ ] `(Infrastructure)` スクリプト実行のためのエントリーポイントや作業ディレクトリを設定"
-        - "[ ] `(Test/Documentation)` Dockerイメージのビルドとコンテナ実行手順を検証・ドキュメント化"
+        - "[x] `(Infrastructure)` ベースとなるPythonのDockerイメージを選定 (`python:3.10-slim`)"
+        - "[x] `(Infrastructure)` `requirements.txt` 等で依存モジュールを管理し、Dockerfile内で `pip install` するように記述 (`pip-tools`を導入)"
+        - "[x] `(Infrastructure)` スクリプト実行のためのエントリーポイントや作業ディレクトリを設定"
+        - "[x] `(Test/Documentation)` Dockerイメージのビルドとコンテナ実行手順を検証・ドキュメント化 (検証スクリプト `.build/check_container_env.sh` を作成)"
       acceptance_criteria:
         - "`docker build` コマンドでイメージが正常にビルドできること。"
         - "ビルドされたイメージからコンテナを起動し、サンプルスクリプト（または本システムの一部）が実行できること。"
