@@ -116,8 +116,8 @@ github_issues_list:
         - "[ ] `(UseCase)` これらのオプション値を後続処理で利用できるようにする。"
         - "[ ] `(Test)` オプションパラメータの解釈、バリデーション、デフォルト値設定に関するユニットテストを作成する (TDD)"
       acceptance_criteria:
-        - "AC-002-01: データ取得間隔（秒数）をオプションで指定でき、システムはその間隔（下限3秒）を遵守する。指定がない場合はデフォルト5秒で動作する。"
-        - "AC-002-02: データ取得間隔が3秒未満で指定された場合、エラーメッセージを表示し処理を開始しない。"
+        - "AC-002-01: データ取得間隔（秒数）をオプションで指定できる。指定がない場合はデフォルト5秒で動作する。"
+        - "AC-002-02: ユーザーが指定したデータ取得間隔が、TASK-ACCESS-POLICY-01で定義されたシステム内部の最小アクセス間隔を下回る場合、警告メッセージを表示しつつ、システムの最小間隔が強制的に適用される。"
         - "AC-002-03: 出力CSVファイルパスをオプションで指定でき、処理結果がそのパスに保存される。指定がない場合はデフォルトの命名規則とパスで保存される。"
       related_requirement: "US-002 (参照元: FR-001-02, FR-002-03)"
       dependencies:
@@ -198,7 +198,7 @@ github_issues_list:
         - "[ ] `(Test)` リクエスト間隔制御のテスト（ログや時間計測で確認）"
       acceptance_criteria:
         - "AC-005-01: 指定されたURLに対してHTTP GETリクエストが送信され、HTMLコンテンツが取得できる。"
-        - "AC-005-02: 連続して複数日のデータを取得する際、各リクエストの送信前に指定されたデータ取得間隔の待機時間が入る。"
+        - "AC-005-02: 連続して複数日のデータを取得する際、各リクエストの送信前に、TASK-ACCESS-POLICY-01で定義されたドメイン別の最小アクセス間隔を遵守した待機時間が入る。"
         - "AC-005-03: HTML取得時にネットワークエラーやHTTPエラーが発生した場合、エラーをログに記録し、該当日の処理はスキップされる（リトライはしない）。"
       related_requirement: "US-005 (参照元: FR-002-02, FR-002-03, FR-002-04, UC-001)"
       dependencies:
@@ -462,7 +462,7 @@ github_issues_list:
     - id: "TASK-002_Issue"
       title: "[TechnicalTask] HTML解析ライブラリの選定と導入 (TASK-002)"
       description: |
-        HTML解析に使用するPythonライブラリ（例: `pandas.read_html`, `Beautiful Soup` + `requests`）を調査・選定し、プロジェクトに導入する。
+        HTML解析に使用するPythonライブラリ（`pandas.read_html`, `Beautiful Soup` + `requests` + `lxml` 等）を調査・選定し、プロジェクトに導入する。
         選定基準は、安定性・確実性を重視しつつ、迅速かつ簡単な実装が可能であること。
       implementation_tasks:
         - "[ ] `(Infrastructure/Adapter-Web)` 候補ライブラリの機能比較、サンプルHTMLでのパース精度・容易性の評価 (PoC)"
@@ -488,11 +488,12 @@ github_issues_list:
       description: |
         Python実行環境と必要な依存モジュールを含むDockerfileを作成し、Dockerイメージをビルド可能にする。
         開発環境と実行環境の差異をなくし、デプロイを容易にする。
+        依存関係は `pip-tools` を用いて `requirements.in/txt` で管理する。
       implementation_tasks:
-        - "[ ] `(Infrastructure)` ベースとなるPythonのDockerイメージを選定"
-        - "[ ] `(Infrastructure)` `requirements.txt` 等で依存モジュールを管理し、Dockerfile内で `pip install` するように記述"
-        - "[ ] `(Infrastructure)` スクリプト実行のためのエントリーポイントや作業ディレクトリを設定"
-        - "[ ] `(Test/Documentation)` Dockerイメージのビルドとコンテナ実行手順を検証・ドキュメント化"
+        - "[x] `(Infrastructure)` ベースとなるPythonのDockerイメージを選定 (`python:3.10-slim`)"
+        - "[x] `(Infrastructure)` `requirements.txt` 等で依存モジュールを管理し、Dockerfile内で `pip install` するように記述 (`pip-tools`を導入)"
+        - "[x] `(Infrastructure)` スクリプト実行のためのエントリーポイントや作業ディレクトリを設定"
+        - "[x] `(Test/Documentation)` Dockerイメージのビルドとコンテナ実行手順を検証・ドキュメント化 (検証スクリプト `.build/check_container_env.sh` を作成)"
       acceptance_criteria:
         - "`docker build` コマンドでイメージが正常にビルドできること。"
         - "ビルドされたイメージからコンテナを起動し、サンプルスクリプト（または本システムの一部）が実行できること。"
@@ -575,7 +576,7 @@ github_issues_list:
       implementation_tasks:
         - "[ ] `(Domain)` `WindDataConverterService` クラス（または関数群）のインターフェース定義"
         - "[ ] `(Domain)` 風向変換ロジック（16方位・静穏・欠損から角度へ）の実装"
-        - "[ ] `(Domain)` 風速変換ロジック（数値・欠損・非数値から数値へ）の実装"
+        - "[ ] `(Domain)` 風速変換ロジック（数値・欠搜・非数値から数値へ）の実装"
         - "[ ] `(Test)` 様々な入力文字列に対する変換サービスのユニットテスト作成 (TDD)"
       acceptance_criteria:
         - "文字列の風向・風速が、定義された変換ルールに従って正しく対応するValueObjectに変換される。"
@@ -673,117 +674,95 @@ github_issues_list:
         - "TDD"
       notes: "[分割必須] このIssueはテスト全体の計画と管理。具体的なテスト実装は、例えば TASK-009-Unit-Domain, TASK-009-Integration-Pipeline のように個別のIssueを作成する。"
 
-    - id: "DISC-001_Issue"
-      title: "[Discussion] CSV空欄表現の具体化"
+    - id: "TASK-ATTRIBUTION-DOC-01_Issue"
+      title: "[TechnicalTask][Documentation] データ利用時の推奨出典表記をREADME等に記載 (TASK-ATTRIBUTION-DOC-01)"
       description: |
-        「補足_確認_検討事項」のNo.1より。
-        エラーでスキップされた日のデータ項目をCSVファイル上で「空欄」と表現する際の具体的な方法を決定する。
+        `TASK-008`調査報告書に基づき、本システムが生成したCSVファイルを利用する際の、気象庁への適切な出典表記方法をユーザー向けドキュメントに明記する。
       implementation_tasks:
-        - "[ ] `,,` のように値がない状態とするか、`\"\"` のように空文字列を明示的に入れるか、`NaN` や `-1` (既存の欠損値と同じ) を使うかなどを検討。"
-        - "[ ] Pandas等、使用するCSV書き出しライブラリのデフォルト挙動を確認。"
-        - "[ ] データ利用者が最も扱いやすい形式を選択する。"
+        - "[ ] `README.md` または別途用意する `USAGE.md` に「データの利用と出典について」といったセクションを設ける。"
+        - "[ ] 推奨される出典表記の具体例を記載する（例: 「出典：気象庁ホームページ （当該ページのURL）に基づき風況データ収集・統合システムが作成」）。"
+        - "[ ] データを加工して利用する場合の注意点も併記する。"
       acceptance_criteria:
-        - "CSVの空欄表現の仕様が明確に定義されること。"
-        - "US-010_Issue (CSV出力) の実装に反映されること。"
-      related_requirement: "補足1"
-      dependencies: null
+        - "ユーザー向けドキュメントに、出典表記に関する明確なガイドラインが追加されていること。"
+      related_requirement: "TASK-008, US-010"
+      dependencies: []
       milestone: "M3"
       labels:
-        - "type:discussion"
+        - "type:documentation"
         - "epic:EPIC-04"
-        - "feature:csv-output"
-        - "needs-discussion"
         - "priority:medium"
-      notes: null
 
-    - id: "DISC-002_Issue"
-      title: "[Discussion] CSV別名保存の命名規則決定"
+    - id: "TASK-THROTTLE-01-FINAL_Issue"
+      title: "[TechnicalTask] リクエストスロットリング機構の実装（ポリシー準拠）(TASK-THROTTLE-01-FINAL)"
       description: |
-        「補足_確認_検討事項」のNo.2より。
-        同名のCSVファイルが既に存在する場合の「別名で保存」の具体的な命名規則を決定する。
+        `adapter-web`レイヤーに、気象庁の警告文と一般的なエチケットを遵守するためのリクエストスロットリング（アクセス間隔制御）機構を実装する。
       implementation_tasks:
-        - "[ ] `filename(1).csv`, `filename(2).csv` のような連番方式で良いか検討。"
-        - "[ ] タイムスタンプを付与する方式（例: `filename_YYYYMMDDHHMMSS.csv`）も比較検討。"
-        - "[ ] 実装の容易性とユーザーの分かりやすさを考慮して決定する。"
+        - "[ ] `TASK-ACCESS-POLICY-01`で決定されたドメインごとの最小アクセス間隔を強制する機能を実装する。"
+        - "[ ] ユーザーが指定したアクセス間隔が、システムで定義された最小値を下回る場合は、システム最小値を優先して適用するロジックを組み込む。"
+        - "[ ] 同一ドメインへのリクエストが並列実行されないようにする（逐次処理を保証する）。"
+        - "[ ] (TDD) 指定された間隔が守られることを検証するユニットテストを作成する（時間を扱うテストには注意を払う）。"
       acceptance_criteria:
-        - "別名保存時の命名規則が明確に定義されること。"
-        - "US-010_Issue (CSV出力) の実装に反映されること。"
-      related_requirement: "補足2"
-      dependencies: null
-      milestone: "M3"
+        - "`data.jma.go.jp`へのリクエストは、`TASK-ACCESS-POLICY-01`で定義された最小間隔（例: 8秒）以上を空けて実行されること。"
+        - "ユーザーが最小値より短い間隔（例: 3秒）を指定しても、システムの最小値が強制されること。"
+        - "関連するユニットテストがすべて成功すること。"
+      related_requirement: "TASK-ACCESS-POLICY-01, US-002, US-005"
+      dependencies: []
+      milestone: "M2"
       labels:
-        - "type:discussion"
-        - "epic:EPIC-04"
-        - "feature:csv-output"
-        - "needs-discussion"
-        - "priority:medium"
-      notes: null
-
-    - id: "DISC-003_Issue"
-      title: "[Discussion] 1日分処理のスタック時タイムアウト値検討"
-      description: |
-        「補足_確認_検討事項」のNo.3より。
-        非機能要件NFR-001における「スタックしたと判断される場合（例: タイムアウト設定）」の具体的なタイムアウト値を検討する。
-      implementation_tasks:
-        - "[ ] 1日分のHTML取得と解析にかかる通常の時間を概算。"
-        - "[ ] ネットワーク遅延なども考慮し、現実的なタイムアウト値を設定（例: 5分、10分など）。"
-        - "[ ] タイムアウト発生時のログ内容、ユーザーへの通知方法も併せて検討。"
-      acceptance_criteria:
-        - "1日分の処理に対するタイムアウト値の目安が設定されること。"
-        - "NFR-001 (性能) の実装・検証に反映されること。"
-      related_requirement: "補足3"
-      dependencies: null
-      milestone: "M5"
-      labels:
-        - "type:discussion"
-        - "epic:EPIC-06"
-        - "feature:error-handling"
-        - "needs-discussion"
-        - "priority:medium"
-      notes: null
-
-    - id: "DISC-004_Issue"
-      title: "[Discussion] ログレベル設定方法の具体化"
-      description: |
-        「補足_確認_検討事項」のNo.4より。
-        機能要件FR-008-02「ログレベル設定可能」の具体的な設定方法を決定する。
-      implementation_tasks:
-        - "[ ] コマンドラインオプション（例: `--loglevel DEBUG`）で指定する方式で良いか確認。"
-        - "[ ] 対応するログレベルの名称（DEBUG, INFO, WARNING, ERRORなど）を定義。"
-      acceptance_criteria:
-        - "ログレベルの設定方法が明確に定義されること。"
-        - "TASK-004_Issue (ロギング基盤実装) に反映されること。"
-      related_requirement: "補足4"
-      dependencies: null
-      milestone: "M4"
-      labels:
-        - "type:discussion"
-        - "epic:EPIC-05"
-        - "feature:logging"
-        - "needs-discussion"
-        - "priority:low"
-      notes: null
-
-    - id: "DISC-005_Issue"
-      title: "[Discussion] HTML構造変更時のエラーメッセージ具体化"
-      description: |
-        「補足_確認_検討事項」のNo.5より。
-        HTML構造変更でデータ抽出に失敗した場合にユーザーに表示するCUIおよびログのメッセージ内容を具体的にする。
-      implementation_tasks:
-        - "[ ] ユーザーが原因を推測しやすく、かつ開発者がデバッグしやすい情報を含むメッセージ案を作成。"
-        - "  (例: `エラー: [YYYY-MM-DD]のデータ抽出に失敗しました。気象庁サイトのページ構成が変更された可能性があります。詳細はログファイル [ログファイルパス] をご確認ください。`)"
-        - "[ ] ログには、どの要素が見つからなかったかなど、より技術的な詳細を含めることを検討。"
-      acceptance_criteria:
-        - "HTML構造変更に起因するデータ抽出失敗時のエラーメッセージ（CUI/ログ）のテンプレートが定義されること。"
-        - "US-006_Issue (HTML抽出)、US-012_Issue (エラー通知) の実装に反映されること。"
-      related_requirement: "補足5"
-      dependencies: null
-      milestone: "M4"
-      labels:
-        - "type:discussion"
+        - "type:technical-task"
         - "epic:EPIC-02"
-        - "epic:EPIC-05"
-        - "feature:error-handling"
-        - "needs-discussion"
-        - "priority:medium"
-      notes: null
+        - "layer:adapter-web"
+        - "layer:infrastructure"
+        - "priority:high"
+
+    - id: "TASK-UA-01_Issue"
+      title: "[TechnicalTask] HTTPクライアントへのカスタムUser-Agent設定 (TASK-UA-01)"
+      description: |
+        `TASK-ACCESS-POLICY-01`で決定されたUser-Agent文字列を、気象庁ドメインへのすべてのHTTPリクエストに適用する。これにより、我々のシステムのアクセスであることを気象庁側が識別できるようになる。
+      implementation_tasks:
+        - "[ ] `adapter-web`レイヤーで使用するHTTPクライアント（例: `requests`）のデフォルトヘッダーに、指定されたUser-Agentを設定する。"
+        - "[ ] 設定が全ての気象庁ドメインへのリクエストに適用されることを確認する。"
+        - "[ ] (TDD) User-Agentが正しくリクエストヘッダーに含まれることを検証するユニットテストを作成する。"
+      acceptance_criteria:
+        - "気象庁サイトへのHTTPリクエストのヘッダーに、`TASK-ACCESS-POLICY-01`で定義されたUser-Agentが正確に含まれていること。"
+        - "関連するユニットテストがすべて成功すること。"
+      related_requirement: "TASK-ACCESS-POLICY-01"
+      dependencies: []
+      milestone: "M2"
+      labels:
+        - "type:technical-task"
+        - "epic:EPIC-02"
+        - "layer:adapter-web"
+        - "layer:infrastructure"
+        - "priority:high"
+
+    - id: "TASK-ACCESS-POLICY-01_Issue"
+      title: "[TechnicalTask][POLICY] JMAアクセス指針の策定と文書化 (TASK-ACCESS-POLICY-01)"
+      description: |
+        `TASK-008`の調査報告書、および`robots.txt`が存在しないという確定情報に基づき、本システムが気象庁ウェブサイトへアクセスする際の明確な技術的・倫理的指針を策定し、開発ドキュメントとして恒久的に記録する。
+        この指針は、`adapter-web`レイヤーの実装における全ての前提条件となる。
+      implementation_tasks:
+        - "[ ] チームミーティング（または非同期議論）を設定し、以下の項目について合意形成を行う。"
+        - "    - 1. **User-Agent文字列の最終決定** (例: `WindDataCollector/1.0 (+http://yourproject.example.com/bot.html)`)
+    - 2. **アクセス間隔のシステム内部最小値の正式決定**
+        - `data.jma.go.jp`ドメインに対する最小値 (警告文を最重視し、5秒〜10秒の範囲で決定)
+        - `www.jma.go.jp`ドメインに対する最小値 (例: 3秒)
+    - 3. **エラーハンドリング方針** (例: HTTP 503エラー受信時は、アクセス間隔を一時的に延長する)"
+        - "[ ] 決定したアクセス指針を開発ドキュメント（例: `docs/COMPLIANCE.md`）に明記する。"
+        - "[ ] 開発チーム全員がこの指針をレビューし、承認したことを確認する。"
+      acceptance_criteria:
+        - "User-Agentの具体的な文字列が決定され、文書化されていること。"
+        - "各関連ドメインに対するシステム内部の最小アクセス間隔が明確に定義され、文書化されていること。"
+        - "上記指針が開発チームに周知徹底され、開発ドキュメントとしてマージされていること。"
+      related_requirement: "TASK-008, US-005"
+      dependencies: []
+      milestone: "M2"
+      labels:
+        - "type:technical-task"
+        - "type:chore"
+        - "type:documentation"
+        - "epic:EPIC-02"
+        - "epic:EPIC-06"
+        - "layer:adapter-web"
+        - "policy"
+        - "priority:high"
