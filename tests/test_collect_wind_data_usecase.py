@@ -15,7 +15,8 @@ def test_execute_valid(capsys):
     )
     usecase = CollectWindDataUsecase()
     usecase.execute(input_data)
-    assert "データ収集中..." in called['msg']
+    captured = capsys.readouterr()
+    assert "データ収集中..." in captured.out
 
 
 def test_execute_invalid_days():

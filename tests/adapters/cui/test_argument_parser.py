@@ -4,23 +4,25 @@ import pytest
 import importlib.util
 
 # argument_parser.py の絶対パス
-argument_parser_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "/app/src/adapters/cui/argument_parser.py"))
-spec = importlib.util.spec_from_file_location("argument_parser", argument_parser_path)
+argument_parser_path = os.path.abspath(os.path.join(
+    os.path.dirname(__file__), "/app/src/adapters/cui/argument_parser.py"))
+spec = importlib.util.spec_from_file_location(
+    "argument_parser", argument_parser_path)
 argument_parser = importlib.util.module_from_spec(spec)
 sys.modules["argument_parser"] = argument_parser
 spec.loader.exec_module(argument_parser)
 parse_args = argument_parser.parse_args
 
+
 def test_parse_args_with_no_arguments():
     """
-    引数なしで呼び出された場合に、正常にデフォルトのNamespaceを返すことを確認する。
-    （受け入れ基準: 基本的な引数なしでの実行）
+    引数なしで呼び出された場合、SystemExit(2)となることを確認する。
     """
-    # Act
-    args = parse_args([])
-    # Assert
-    # 現状では引数を定義していないため、空のNamespaceオブジェクトが返る
-    assert args is not None 
+    with pytest.raises(SystemExit) as e:
+        parse_args([])
+    assert e.type == SystemExit
+    assert e.value.code == 2
+
 
 def test_parse_args_with_unknown_argument_raises_error():
     """
@@ -34,6 +36,7 @@ def test_parse_args_with_unknown_argument_raises_error():
     # argparseはエラー時に終了コード2で終了する
     assert e.type == SystemExit
     assert e.value.code == 2
+
 
 def test_parse_args_with_help_option_exits():
     """
