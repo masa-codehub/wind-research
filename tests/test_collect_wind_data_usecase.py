@@ -6,12 +6,7 @@ sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '../')))
 
 
-def test_execute_valid(monkeypatch):
-    called = {}
-
-    def fake_print(msg):
-        called['msg'] = msg
-    monkeypatch.setattr("builtins.print", fake_print)
+def test_execute_valid(capsys):
     input_data = CollectWindDataInput(
         prefecture_no="01",
         block_no="001",
