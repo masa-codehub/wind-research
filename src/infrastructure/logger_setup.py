@@ -33,6 +33,9 @@ def setup_logging(log_level: str = DEFAULT_LOG_LEVEL, log_file_path: str = "wind
     root_logger.addHandler(console_handler)
 
     # ファイルハンドラ
+    log_dir = os.path.dirname(log_file_path)
+    if log_dir and not os.path.exists(log_dir):
+        os.makedirs(log_dir)
     file_handler = FileHandler(log_file_path, mode='a', encoding='utf-8')
     file_handler.setFormatter(log_format)
     root_logger.addHandler(file_handler)
