@@ -19,6 +19,7 @@ pytest                  # テストフレームワーク
 pytest-cov            # pytest 用のカバレッジ測定ツール
 ruff                    # 高速な Linter & Formatter
 mypy                    # 静的型チェッカー
+requests-mock
 
 # 他に必要な開発ツールがあれば以下に追加
 #例:
