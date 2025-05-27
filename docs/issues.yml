@@ -359,14 +359,16 @@ github_issues_list:
         ユーザーストーリー US-010 を実装する。
         > データ利用者として、処理・統合された風況データをUTF-8エンコーディングのCSVファイルとして出力してほしい。それは、様々な分析ツールで容易に利用できる標準的な形式だからだ。
       implementation_tasks:
-        - "[ ] `(Adapter-File)` 統合されたデータセットをCSV形式でファイルに書き出す機能を実装する (Pythonの`csv`モジュールや`pandas`の`to_csv`など)"
-        - "[ ] `(Adapter-File)` 出力ファイルの文字エンコーディングをUTF-8に指定する"
-        - "[ ] `(Adapter-File)` CSVのヘッダー行（英語）を定義し、出力する"
-        - "[ ] `(Adapter-File)` スキップされた日のデータ項目を空欄で出力する処理を実装する"
-        - "[ ] `(Adapter-File)` 出力ファイルパスが指定されていない場合のデフォルトパス・ファイル名生成ロジックを実装する"
-        - "[ ] `(Adapter-File)` 同名ファイル存在時の別名保存ロジック（例: `filename(1).csv`）を実装する"
-        - "[ ] `(Adapter-File/UseCase)` ファイル書き込みエラー（権限、ディスク容量）のハンドリングとCUI/ログへのエラー情報出力を実装する (TASK-004_Issue 依存)"
-        - "[ ] `(Test)` CSV出力機能のユニットテスト・結合テストを作成する (TDD、ファイルI/Oは適切に扱う)"
+        - "[x] `(Port)` `src/usecases/ports/wind_data_output_port.py` に、ファイル出力インターフェース `IWindDataOutputPort` とカスタム例外 `FileOutputError` を定義した。"
+        - "[x] `(Adapter-File)` `src/adapters/file/csv_output_adapter.py` に `CsvOutputAdapter` を実装。`pandas` を利用して `WindDataRecord` のリストをCSVに変換・出力するロジックを実装した。"
+        - "[x] `(Adapter-File)` `CsvOutputAdapter` に、UTF-8エンコーディング (`utf-8-sig`) 指定、英語ヘッダー定義、欠損値 (-1.0) の空欄 (`None`経由) 出力、デフォルトパス生成、同名ファイル存在時の別名保存 (`filename(1).csv` 形式) ロジックを実装した。"
+        - "[x] `(Adapter-File)` `CsvOutputAdapter` の `save` メソッドに、`IOError` や `PermissionError` を捕捉し `FileOutputError` を送出するエラーハンドリングを実装した。"
+        - "[x] `(UseCase)` `CollectWindDataInput` DTOに `output_path: str | None` フィールドを追加した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase` のコンストラクタを修正し `IWindDataOutputPort` を受け取るようにし、`execute` メソッド内でファイル保存処理を呼び出し、保存パスを返すようにした。"
+        - "[x] `(Adapter-CUI)` `src/adapters/cui/argument_parser.py` に `--output` オプションを追加した。"
+        - "[x] `(Adapter-CUI)` `main.py` を修正し、`CsvOutputAdapter` を注入し、`FileOutputError` を捕捉してCUI/ログにエラー出力するようにした。"
+        - "[x] `(Test)` `tests/adapters/file/test_csv_output_adapter.py` に、`CsvOutputAdapter` の主要機能（正常系、欠損値、別名保存、エラーハンドリング）を検証する単体テストを実装した。"
+        - "[x] `(Test)` `tests/test_collect_wind_data_usecase.py` と `tests/test_collect_wind_data_usecase_port.py` を更新し、ファイル出力ポートのモック利用と関連ログの検証を追加・改善した。"
       acceptance_criteria:
         - "AC-010-01: 統合データが、指定された（またはデフォルトの）ファイルパスにCSVファイルとして保存される。"
         - "AC-010-02: CSVファイルの文字エンコーディングはUTF-8である。"

@@ -35,7 +35,8 @@ def test_execute_fetch_error_logs_and_skips(mock_url_builder, caplog, patch_conv
     usecase = CollectWindDataUsecase(
         parser=Mock(),
         page_fetcher=fetcher_mock, url_builder=mock_url_builder,
-        logger=None
+        logger=Mock(),
+        output_port=Mock()
     )
     input_data = CollectWindDataInput("01", "001", "2025-05-27", 2)
     usecase.execute(input_data)
@@ -64,15 +65,17 @@ def test_execute_fetch_success_then_error(mock_url_builder, caplog, patch_conver
     parser_mock.parse.return_value = [DummyRawDto()]
     # patch_converterでDummyConverterを使う
     with patch("src.usecases.collect_wind_data_usecase.WindDataConverterService", return_value=DummyConverter()):
+        logger_mock = Mock()
         usecase = CollectWindDataUsecase(
             parser=parser_mock,
             page_fetcher=fetcher_mock,
             url_builder=mock_url_builder,
-            logger=None
+            logger=logger_mock,
+            output_port=Mock()
         )
         input_data = CollectWindDataInput("01", "001", "2025-05-27", 2)
         usecase.execute(input_data)
         assert fetcher_mock.fetch.call_count == 2
-        # 2日目のスキップWARNINGログのみ検証
-        assert any("のデータ取得をスキップします（HTML取得エラー）。理由: Simulated fetch failure for day 2" in r.message and r.levelname ==
-                   "WARNING" for r in caplog.records)
+        # 2回目のスキップWARNINGログのみ検証
+        calls = [str(call) for call in logger_mock.warning.call_args_list]
+        assert any("Simulated fetch failure for day 2" in c for c in calls)

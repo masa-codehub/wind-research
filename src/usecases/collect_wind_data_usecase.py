@@ -9,6 +9,7 @@ from src.usecases.ports.wind_data_parser_port import IWindDataParser, HtmlParsin
 # main ブランチの import
 from src.usecases.ports.jma_page_fetcher_port import IJmaPageFetcher, HtmlFetchingError
 from src.usecases.ports.url_builder_port import IUrlBuilder
+from src.usecases.ports.wind_data_output_port import IWindDataOutputPort
 import logging
 from src.domain.models.observation_point import ObservationPointValue
 from src.domain.models.wind_direction import WindDirectionValue
@@ -24,6 +25,7 @@ class CollectWindDataInput:
     start_date_str: str
     days: int
     interval_sec: float = 5.0  # main ブランチのデフォルト値を取り込み
+    output_path: str | None = None  # ファイル出力パスを追加
 
 
 class CollectWindDataUsecase:
@@ -32,14 +34,13 @@ class CollectWindDataUsecase:
                  parser: IWindDataParser,
                  page_fetcher: IJmaPageFetcher,
                  url_builder: IUrlBuilder,  # main ブランチの url_builder を必須引数に変更
-                 logger=None):  # logger を明示的な引数に
-        if logger is None:
-            import logging
-            logger = logging.getLogger(__name__)
+                 output_port: IWindDataOutputPort,
+                 logger: logging.Logger):
         self.converter = WindDataConverterService()
         self.parser = parser
         self.page_fetcher = page_fetcher
         self.url_builder = url_builder
+        self.output_port = output_port
         self.logger = logger  # main.py から渡されるloggerを使用
 
     def _create_skipped_day_records(self, target_date: date) -> list[WindDataRecord]:
@@ -166,7 +167,11 @@ class CollectWindDataUsecase:
         # 観測日時で昇順ソート
         all_wind_data_records.sort(key=lambda r: r.observed_at)
         self.logger.info("全てのデータ取得・処理が完了しました。")
-        return all_wind_data_records
+        # ファイル出力処理を追加
+        saved_path = self.output_port.save(
+            all_wind_data_records, input_data.output_path)
+        self.logger.info(f"ファイル出力完了: {saved_path}")
+        return saved_path
 
     # _fetch_and_process_daily_data 及び _fetch_and_process_daily_data_stub は
     # execute メソッド内で日次ループとHTML取得・解析が統合されたため不要。
