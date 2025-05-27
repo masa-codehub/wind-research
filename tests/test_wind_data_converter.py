@@ -48,3 +48,12 @@ def test_convert_wind_speed(text, expected_speed):
     service = WindDataConverterService()
     result = service.convert_wind_speed_from_text(text)
     assert result.value_mps == expected_speed
+
+
+def test_convert_wind_direction_nan_sei_no_kaze():
+    from src.domain.services.wind_data_converter import WindDataConverterService
+    service = WindDataConverterService()
+    result = service.convert_wind_direction_from_text("南西の風")
+    assert result.degree == -1.0
+    assert result.direction == "欠損"
+    assert result.original_text == "南西の風"

@@ -1,12 +1,17 @@
 import sys
+import logging
+from src.infrastructure.logger_setup import setup_logging
 # 引数解析部をインポート
 from src.adapters.cui.argument_parser import parse_args
 # UsecaseとInput DTOをインポート
 from src.usecases.collect_wind_data_usecase import CollectWindDataUsecase, CollectWindDataInput
+from src.adapters.web.jma_html_parser import JmaHtmlParser
 
 
 def main():
     """アプリケーションのメインエントリーポイント"""
+    setup_logging()
+    logger = logging.getLogger(__name__)
     try:
         # 引数を解析
         args = parse_args()
@@ -20,11 +25,12 @@ def main():
         )
 
         # Usecaseを実行
-        usecase = CollectWindDataUsecase()
+        parser = JmaHtmlParser()
+        usecase = CollectWindDataUsecase(parser=parser, logger=logger)
         usecase.execute(input_dto)
 
     except ValueError as e:
-        # ドメイン/ユースケースレベルのエラーハンドリング
+        logger.error(f"パラメータが不正です: {e}")
         print(f"エラー: パラメータが不正です。\n{e}", file=sys.stderr)
         sys.exit(1)
     except SystemExit as e:

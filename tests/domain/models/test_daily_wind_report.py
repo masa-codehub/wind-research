@@ -1,21 +1,24 @@
+from src.domain.models.wind_speed import WindSpeedValue
+from src.domain.models.wind_direction import WindDirectionValue
+from src.domain.models.wind_data_record import WindDataRecord
+from src.domain.models.observation_point import ObservationPointValue
+from src.domain.models.daily_wind_report import DailyWindReport
+from uuid import UUID
+from datetime import date, datetime
+import pytest
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+sys.path.insert(0, os.path.abspath(
+    os.path.join(os.path.dirname(__file__), '../../../')))
 
-import pytest
-from datetime import date
-from uuid import UUID
-from src.domain.models.daily_wind_report import DailyWindReport
-from src.domain.models.observation_point import ObservationPointValue
-from src.domain.models.wind_data_record import WindDataRecord
-from src.domain.models.wind_direction import WindDirectionValue
-from src.domain.models.wind_speed import WindSpeedValue
 
 class TestDailyWindReport:
     def setup_method(self):
-        self.observation_point = ObservationPointValue(prefecture_no="01", block_no="1234")
+        self.observation_point = ObservationPointValue(
+            prefecture_no="01", block_no="1234")
         self.report_date = date(2025, 5, 27)
-        self.report = DailyWindReport(observation_point=self.observation_point, report_date=self.report_date)
+        self.report = DailyWindReport(
+            observation_point=self.observation_point, report_date=self.report_date)
 
     def test_create_valid(self):
         assert self.report.observation_point == self.observation_point
@@ -25,7 +28,8 @@ class TestDailyWindReport:
 
     def test_add_record(self):
         self.report.add_record(
-            observed_at=datetime.combine(self.report_date, datetime.min.time()),
+            observed_at=datetime.combine(
+                self.report_date, datetime.min.time()),
             average_wind_direction=WindDirectionValue.from_text("北"),
             average_wind_speed=WindSpeedValue(5.0),
             max_wind_direction=WindDirectionValue.from_text("南"),
@@ -65,5 +69,6 @@ class TestDailyWindReport:
         assert len(self.report.records) == 1  # 内部リストは不変
 
     def test_equality_id(self):
-        report2 = DailyWindReport(observation_point=self.observation_point, report_date=self.report_date)
+        report2 = DailyWindReport(
+            observation_point=self.observation_point, report_date=self.report_date)
         assert self.report != report2  # UUIDが異なるため
