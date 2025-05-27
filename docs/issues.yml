@@ -79,11 +79,11 @@ github_issues_list:
         ユーザーストーリー US-001 を実装する。
         > データ利用者として、コマンドラインから必須パラメータ（観測地点、期間）を指定して風況データ収集処理を開始したい。それは、特定の条件のデータを手軽に取得するためだ。
       implementation_tasks:
-        - "[x] `(Adapter-CUI)` `main.py` に `argparse` を用いてコマンドライン引数（--prefecture_no, --block_no, --start_date, --days）を定義"
-        - "[x] `(Domain)` 日付文字列のバリデーションを行う値オブジェクト `DateValue` を実装"
-        - "[x] `(UseCase)` 入力DTO `CollectWindDataInput` および、バリデーションと後続処理の呼び出しを行う `CollectWindDataUsecase` を実装"
-        - "[x] `(Adapter-CUI)` ユースケースから送出された `ValueError` を捕捉し、標準エラー出力にメッセージを表示後、`sys.exit(1)` で終了する処理を実装"
-        - "[x] `(Test)` `domain`, `usecase` 層の単体テスト、および `adapter-cui` 層のE2Eテストを実装"
+        - "[x] `(Adapter-CUI)` `src/adapters/cui/argument_parser.py` にて、`argparse` を用いて必須引数 (`--prefecture_no`, `--block_no`, `--start_date`, `--days`) を定義した。"
+        - "[x] `(Domain)` 日付書式(`YYYY-MM-DD`)と妥当性を検証する値オブジェクト `DateValue` を `src/domain/models/date.py` に実装した。"
+        - "[x] `(UseCase)` CUIからの入力を受け取る `CollectWindDataInput` DTOと、処理の起点となる `CollectWindDataUsecase` を `src/usecases/collect_wind_data_usecase.py` に実装した。"
+        - "[x] `(Adapter-CUI)` `main.py` にて、引数解析エラー (`SystemExit`) とドメイン/ユースケース由来の不正値エラー (`ValueError`) を捕捉し、エラーメッセージ出力と終了コード制御を行うロジックを実装した。"
+        - "[x] `(Test)` `DateValue` の単体テスト (`tests/test_date_value.py`) と、`main.py` の振る舞いを検証するE2Eテスト (`tests/test_main_e2e.py`) を実装した。"
       acceptance_criteria:
         - "AC-001-01: コマンドラインで都道府県番号、地点番号、開始年月日、取得期間（日数または終了年月日）を指定してスクリプトを実行できる。"
         - "AC-001-02: 指定された必須パラメータが正しく解釈され、データ取得処理が開始される（または後続処理のスタブが呼ばれる）。"
@@ -545,13 +545,12 @@ github_issues_list:
         要件定義書で定義されたドメインモデル（`WindDataRecord`, `DailyWindReport`, 各ValueObjectなど）のPythonクラスを実装する。
         不変性、バリデーションロジック、等価性比較などを適切に実装する。TDDで進める。
       implementation_tasks:
-        - "[ ] `(Domain)` `ObservationPointValue` (都道府県番号, 地点番号) の実装とテスト"
-        - "[ ] `(Domain)` `DateTimeRangeValue` (期間) の実装とテスト"
-        - "[ ] `(Domain)` `WindDirectionValue` (風向: 角度, 元文字列) の実装とテスト"
-        - "[ ] `(Domain)` `WindSpeedValue` (風速: m/s) の実装とテスト"
-        - "[ ] `(Domain)` `WindDataRecord` (10分毎の観測データ) エンティティの実装とテスト"
-        - "[ ] `(Domain)` `DailyWindReport` (日次レポート、集約ルート) エンティティの実装とテスト"
-        - "[ ] `(Domain)` 上記クラス間の関連性、不変条件を実装に反映"
+        - "[x] `(Domain)` 不変な値オブジェクト `ObservationPointValue` と `DateTimeRangeValue` を自己検証ロジックと共に実装"
+        - "[x] `(Domain)` `from_text` ファクトリメソッドを持つ不変な値オブジェクト `WindDirectionValue` と `WindSpeedValue` を実装"
+        - "[x] `(Domain)` UUIDを識別子として持つ `WindDataRecord` エンティティを実装"
+        - "[x] `(Domain)` `DailyWindReport` を集約ルートとして実装し、`WindDataRecord` の生成と追加ロジックをカプセル化"
+        - "[x] `(Domain)` `DailyWindReport` にビジネスルール（レコード数の上限が144件）を実装し、テストで検証"
+        - "[x] `(Test)` 上記すべてのドメインモデルに対し、不変性・等価性・バリデーション・ビジネスルールを網羅する単体テストを実装"
       acceptance_criteria:
         - "各クラスがドメインモデル定義に従って属性と振る舞いを持つ。"
         - "ValueObjectは不変であり、内容に基づいた等価性比較が実装されている。"
@@ -569,17 +568,17 @@ github_issues_list:
         - "ddd:value-object"
         - "priority:high"
         - "TDD"
-      notes: "TDDで開発を進める。"
+      notes: "TDDで開"
 
     - id: "TASK-006_Issue"
       title: "[TechnicalTask] 風向・風速変換ドメインサービス実装 (TASK-006)"
       description: |
         `WindDataConverterService` を実装し、文字列形式の風向・風速データをドメインモデルの `WindDirectionValue` および `WindSpeedValue` オブジェクトに変換するロジックを提供する。
       implementation_tasks:
-        - "[ ] `(Domain)` `WindDataConverterService` クラス（または関数群）のインターフェース定義"
-        - "[ ] `(Domain)` 風向変換ロジック（16方位・静穏・欠損から角度へ）の実装"
-        - "[ ] `(Domain)` 風速変換ロジック（数値・欠搜・非数値から数値へ）の実装"
-        - "[ ] `(Test)` 様々な入力文字列に対する変換サービスのユニットテスト作成 (TDD)"
+        - "[x] `(Domain)` `domain/services/wind_data_converter.py` に `WindDataConverterService` クラスを実装"
+        - "[x] `(Domain)` 風向変換ロジックを実装。16方位・静穏・欠損値（///）を、辞書マップを用いて定義済みの角度(float)に変換する"
+        - "[x] `(Domain)` 風速変換ロジックを実装。変換不可能な文字列（非数値、None）はフォールバック値 -1.0 として処理する"
+        - "[x] `(Test)` `test_wind_data_converter.py` に、正常系・境界値・異常系を網羅する単体テストを実装し、全件PASSを確認"
       acceptance_criteria:
         - "文字列の風向・風速が、定義された変換ルールに従って正しく対応するValueObjectに変換される。"
         - "不正な入力や未定義の入力に対するフォールバック処理（例: -1.0設定、ログ記録）が機能する。"
