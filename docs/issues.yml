@@ -328,9 +328,13 @@ github_issues_list:
         ユーザーストーリー US-009 を実装する。
         > システムとして、日毎に処理した10分毎の風況データを、指定された全期間にわたり時系列に統合したい。それは、期間全体の連続したデータセットを作成するためだ。
       implementation_tasks:
-        - "[ ] `(UseCase/Domain)` 複数日分の処理済みデータ（`WindDataRecord`のリストまたは`DailyWindReport`のリスト）を保持し、最終的に観測日時順にソートして1つのデータセットにまとめるロジックを実装する"
-        - "[ ] `(Domain)` エラーでスキップされた日のデータ（日付・時刻のみで風況データは空欄）の表現方法を最終データセット内で統一する"
-        - "[ ] `(Test)` 複数日のデータ（正常データ、スキップデータ混在）が正しく統合・ソートされることを検証するユニットテストを作成する (TDD)"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`に、日次処理で生成された`WindDataRecord`（正常データおよびスキップデータ）を蓄積するためのインスタンス変数（リスト `all_wind_data_records`）を実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`に、`_create_skipped_day_records`メソッドを実装し、指定された日付に対して10分毎のタイムスタンプ（00:10～24:00の計144件）を持つ欠損`WindDataRecord`のリストを生成するようにした。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase.execute`メソッド内で、HTML取得エラー (`HtmlFetchingError`)、HTML解析エラー (`HtmlParsingError`)、またはその他の予期せぬ例外が発生した場合に、`_create_skipped_day_records`を呼び出してスキップ日データを生成し、リストに追加して処理を継続するエラーハンドリングを実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase.execute`メソッドの最後に、蓄積された`all_wind_data_records`リストを`WindDataRecord.observed_at`属性をキーとして昇順にソートする処理を実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`のコンストラクタを修正し、依存コンポーネント (`IWindDataParser`, `IJmaPageFetcher`, `IUrlBuilder`, `logger`) を依存性注入（DI）で受け取るようにした。"
+        - "[x] `(UseCase)` 不要となったスタブメソッド `_fetch_and_process_daily_data_stub` を削除した。"
+        - "[x] `(Test)` `tests/test_collect_wind_data_usecase.py` を更新し、`CollectWindDataUsecase`のデータ統合・ソート・スキップ処理（正常系、各種エラー発生時のスキップデータ生成、複数日混在時のソート）を検証する単体テストを拡充・修正した。"
       acceptance_criteria:
         - "AC-009-01: 複数日にまたがるデータが、観測日時の昇順に正しくソートされて統合される。"
         - "AC-009-02: データ取得や解析エラーでスキップされた日のデータは、CSV上では日付・時刻列のみが記録され、他の風況データ項目は空欄（または指定の欠損値表現）として統合される。"
