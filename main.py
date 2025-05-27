@@ -1,17 +1,20 @@
 import sys
 import logging
 from src.infrastructure.logger_setup import setup_logging
-# 引数解析部をインポート
 from src.adapters.cui.argument_parser import parse_args
-# UsecaseとInput DTOをインポート
 from src.usecases.collect_wind_data_usecase import CollectWindDataUsecase, CollectWindDataInput
 from src.adapters.web.jma_html_parser import JmaHtmlParser
+from src.adapters.web.jma_page_fetcher_adapter import JmaPageFetcherAdapter # mainブランチの変更を取り込み
+
+# issue#21_01ブランチの sys.path.insert は、
+# プロジェクト構造とPYTHONPATHが適切に設定されていれば通常不要なため、
+# よりクリーンな import logging のみを残します。
 
 
 def main():
     """アプリケーションのメインエントリーポイント"""
-    setup_logging()
-    logger = logging.getLogger(__name__)
+    setup_logging() # issue#21_01ブランチの変更
+    logger = logging.getLogger(__name__) # issue#21_01ブランチの変更
     try:
         # 引数を解析
         args = parse_args()
@@ -25,12 +28,25 @@ def main():
         )
 
         # Usecaseを実行
-        parser = JmaHtmlParser()
-        usecase = CollectWindDataUsecase(parser=parser, logger=logger)
+        # 依存性を注入
+        html_parser = JmaHtmlParser() # issue#21_01ブランチの変更
+        page_fetcher = JmaPageFetcherAdapter() # mainブランチの変更
+
+        # CollectWindDataUsecase のコンストラクタに合わせて引数を設定
+        # issue#21_01 では (parser, logger), main では (page_fetcher)
+        # 両方の機能が必要になるため、CollectWindDataUsecase のコンストラクタが
+        # これら両方（または必要なもの）を受け取るように変更されていることを想定します。
+        # ここでは、両方のブランチの意図を汲み、全てを渡す形を仮定します。
+        # 実際の CollectWindDataUsecase の定義に合わせて調整が必要です。
+        usecase = CollectWindDataUsecase(
+            parser=html_parser,
+            logger=logger,
+            page_fetcher=page_fetcher # page_fetcher を追加
+        )
         usecase.execute(input_dto)
 
     except ValueError as e:
-        logger.error(f"パラメータが不正です: {e}")
+        logger.error(f"パラメータが不正です: {e}") # issue#21_01ブランチの変更
         print(f"エラー: パラメータが不正です。\n{e}", file=sys.stderr)
         sys.exit(1)
     except SystemExit as e:
