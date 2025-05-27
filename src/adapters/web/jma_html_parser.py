@@ -50,5 +50,7 @@ class JmaHtmlParser(IWindDataParser):
                     max_wind_speed_str=str(row['max_wind_speed_str']),
                 ))
             return raw_data_list
+        except HtmlParsingError as e:
+            raise
         except Exception as e:
             raise HtmlParsingError(f"HTML解析中に予期せぬエラーが発生しました: {e}")
