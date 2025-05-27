@@ -25,7 +25,7 @@ class TestDailyWindReport:
 
     def test_add_record(self):
         self.report.add_record(
-            observed_at=self.report_date,
+            observed_at=datetime.combine(self.report_date, datetime.min.time()),
             average_wind_direction=WindDirectionValue.from_text("北"),
             average_wind_speed=WindSpeedValue(5.0),
             max_wind_direction=WindDirectionValue.from_text("南"),
