@@ -224,15 +224,20 @@ github_issues_list:
         ユーザーストーリー US-006 を実装する。
         > システムとして、取得したHTMLコンテンツから10分毎の風況関連データ（時刻、風向文字列、風速文字列など）を正確に抽出したい。それは、後続の変換処理に必要な生データを得るためだ。
       implementation_tasks:
-        - "[ ] `(Adapter-Web)` HTML内の風況データテーブルを特定するロジックを実装する（TASK-002で選定したライブラリを使用）"
-        - "[ ] `(Adapter-Web/Domain)` テーブルの各行から10分ごとの観測時刻、平均風向（文字列）、平均風速(m/s文字列)、最大瞬間風速(m/s文字列)、最大瞬間風速の風向（文字列）を抽出するロジックを実装する"
-        - "[ ] `(Domain)` 抽出した生データを保持するための単純なデータ構造（DTOや辞書など）を定義する"
-        - "[ ] `(Adapter-Web/UseCase)` データ項目が「///」（欠損）の場合の扱いを実装する (文字列として抽出)"
-        - "[ ] `(Adapter-Web/UseCase)` HTML構造が予期せぬ形式でデータ抽出に失敗した場合のエラーハンドリング（ログ記録、スキップ）を実装する (TASK-004_Issue 依存)"
-        - "[ ] `(Test)` サンプルHTMLを用いたデータ抽出ロジックのユニットテストを作成する (TDD)"
-        - "[ ] `(Test)` 欠損値や異常なHTML構造に対するテストケースを作成する"
+        - "[x] `(Adapter-Web)` `JmaHtmlParser`クラスを実装し、`BeautifulSoup`でテーブル(id='tablefix1')を特定後、`pandas.read_html` (header=1) でデータをDataFrameとして読み込み、列名をリネームするロジックを実装した。"
+        - "[x] `(Adapter-Web)` DataFrameの各行から観測時刻、平均風向、平均風速、最大瞬間風速、最大瞬間風向の各文字列を抽出し、`RawWindDataDto`にマッピングするロジックを実装した。"
+        - "[x] `(Domain)` `domain/dtos`配下に、HTMLから抽出した生の文字列データを保持する`RawWindDataDto`を定義した。"
+        - "[x] `(UseCase/Ports)` `usecases/ports`にHTML解析処理の抽象インターフェース`IWindDataParser`とカスタム例外`HtmlParsingError`を定義した。"
+        - "[x] `(Adapter-Web)` `JmaHtmlParser`で、欠損値('--'や'///'等)を`na_values=[], keep_default_na=False`オプションにより文字列として保持するようにした。"
+        - "[x] `(Adapter-Web)` `JmaHtmlParser`で、テーブルや必須列が見つからない場合に`HtmlParsingError`を送出するエラーハンドリングを実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`で`HtmlParsingError`を捕捉し、エラーログ記録後に該当日の処理をスキップするエラーハンドリングを実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`で、`RawWindDataDto`の時刻文字列パース失敗時にエラーログを記録し、該当レコードをスキップするエラーハンドリングを追加した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`のコンストラクタを修正し、`IWindDataParser`に依存するようにし、DIコンテナ（`main.py`）から`JmaHtmlParser`インスタンスを受け取るようにした。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`内で、`RawWindDataDto`から`WindDataRecord`への変換、特に`observed_at`の日時生成（'24:00'を当日23:59とする処理含む）を実装した。"
+        - "[x] `(Test)` `tests/adapters/web/test_jma_html_parser.py`に、`sample_jma.html`を用いた正常系（データ件数、特定レコード値）、異常系（テーブル不在、列不足）のパーサー単体テストを実装した。"
+        - "[x] `(Test)` `tests/test_collect_wind_data_usecase.py`に、パーサーモックを用いた`HtmlParsingError`発生時のログ記録・スキップ処理、未定義風向文字列検出時の警告ログ出力のユースケース単体テストを実装・修正した。"
       acceptance_criteria:
-        - "AC-006-01: HTML内の正しいテーブル要素から、10分ごとの観測時刻、平均風向（文字列）、平均風速(m/s)、最大瞬間風速(m/s)、最大瞬間風速の風向（文字列）が抽出される。"
+        - "AC-006-01: HTML内の正しいテーブル要素から、10分ごとの観測時刻、平均風向（文字列）、平均風速(m/s)、最大瞬間風速(m/s)、最大瞬間風速の風向（数値）が抽出される。"
         - "AC-006-02: データ項目が「///」（欠損）の場合も、その文字列として抽出される。"
         - "AC-006-03: HTML構造が予期せぬ形式でデータ抽出に失敗した場合、エラーをログに記録し、該当日の処理はスキップされる。"
       related_requirement: "US-006 (参照元: FR-003-01, FR-003-02, UC-001)"
@@ -323,9 +328,13 @@ github_issues_list:
         ユーザーストーリー US-009 を実装する。
         > システムとして、日毎に処理した10分毎の風況データを、指定された全期間にわたり時系列に統合したい。それは、期間全体の連続したデータセットを作成するためだ。
       implementation_tasks:
-        - "[ ] `(UseCase/Domain)` 複数日分の処理済みデータ（`WindDataRecord`のリストまたは`DailyWindReport`のリスト）を保持し、最終的に観測日時順にソートして1つのデータセットにまとめるロジックを実装する"
-        - "[ ] `(Domain)` エラーでスキップされた日のデータ（日付・時刻のみで風況データは空欄）の表現方法を最終データセット内で統一する"
-        - "[ ] `(Test)` 複数日のデータ（正常データ、スキップデータ混在）が正しく統合・ソートされることを検証するユニットテストを作成する (TDD)"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`に、日次処理で生成された`WindDataRecord`（正常データおよびスキップデータ）を蓄積するためのインスタンス変数（リスト `all_wind_data_records`）を実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`に、`_create_skipped_day_records`メソッドを実装し、指定された日付に対して10分毎のタイムスタンプ（00:10～24:00の計144件）を持つ欠損`WindDataRecord`のリストを生成するようにした。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase.execute`メソッド内で、HTML取得エラー (`HtmlFetchingError`)、HTML解析エラー (`HtmlParsingError`)、またはその他の予期せぬ例外が発生した場合に、`_create_skipped_day_records`を呼び出してスキップ日データを生成し、リストに追加して処理を継続するエラーハンドリングを実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase.execute`メソッドの最後に、蓄積された`all_wind_data_records`リストを`WindDataRecord.observed_at`属性をキーとして昇順にソートする処理を実装した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase`のコンストラクタを修正し、依存コンポーネント (`IWindDataParser`, `IJmaPageFetcher`, `IUrlBuilder`, `logger`) を依存性注入（DI）で受け取るようにした。"
+        - "[x] `(UseCase)` 不要となったスタブメソッド `_fetch_and_process_daily_data_stub` を削除した。"
+        - "[x] `(Test)` `tests/test_collect_wind_data_usecase.py` を更新し、`CollectWindDataUsecase`のデータ統合・ソート・スキップ処理（正常系、各種エラー発生時のスキップデータ生成、複数日混在時のソート）を検証する単体テストを拡充・修正した。"
       acceptance_criteria:
         - "AC-009-01: 複数日にまたがるデータが、観測日時の昇順に正しくソートされて統合される。"
         - "AC-009-02: データ取得や解析エラーでスキップされた日のデータは、CSV上では日付・時刻列のみが記録され、他の風況データ項目は空欄（または指定の欠損値表現）として統合される。"

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta  # timedelta を main ブランチから取り込み
+from datetime import datetime, timedelta, time, date  # timedelta を main ブランチから取り込み
 from src.domain.models.date import DateValue
 from src.domain.models.wind_data_record import WindDataRecord
 from src.domain.services.wind_data_converter import WindDataConverterService
@@ -12,6 +12,8 @@ from src.usecases.ports.url_builder_port import IUrlBuilder
 from src.usecases.ports.wind_data_output_port import IWindDataOutputPort
 import logging
 from src.domain.models.observation_point import ObservationPointValue
+from src.domain.models.wind_direction import WindDirectionValue
+from src.domain.models.wind_speed import WindSpeedValue
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +42,36 @@ class CollectWindDataUsecase:
         self.url_builder = url_builder
         self.output_port = output_port
         self.logger = logger  # main.py から渡されるloggerを使用
+
+    def _create_skipped_day_records(self, target_date: date) -> list[WindDataRecord]:
+        """指定日付の10分毎の空WindDataRecordを144個生成（00:10～23:50, 24:00）"""
+        records = []
+        from datetime import datetime, timedelta
+        # 00:10～23:50
+        for h in range(24):
+            for m in range(0, 60, 10):
+                if h == 0 and m == 0:
+                    continue  # 00:00は除外
+                obs_at = datetime(target_date.year,
+                                  target_date.month, target_date.day, h, m)
+                records.append(WindDataRecord(
+                    observed_at=obs_at,
+                    average_wind_direction=WindDirectionValue.from_text("///"),
+                    average_wind_speed=WindSpeedValue.from_text("///"),
+                    max_wind_direction=WindDirectionValue.from_text("///"),
+                    max_wind_speed=WindSpeedValue.from_text("///")
+                ))
+        # 24:00（翌日0:00）
+        obs_at_24 = datetime(target_date.year, target_date.month,
+                             target_date.day) + timedelta(days=1)
+        records.append(WindDataRecord(
+            observed_at=obs_at_24,
+            average_wind_direction=WindDirectionValue.from_text("///"),
+            average_wind_speed=WindSpeedValue.from_text("///"),
+            max_wind_direction=WindDirectionValue.from_text("///"),
+            max_wind_speed=WindSpeedValue.from_text("///")
+        ))
+        return records
 
     def execute(self, input_data: CollectWindDataInput):
         try:
@@ -93,10 +125,9 @@ class CollectWindDataUsecase:
 
                     try:
                         hour, minute = map(int, raw_dto.time_str.split(":"))
-                        observed_at_dt: datetime
                         if hour == 24 and minute == 0:
                             observed_at_dt = datetime(
-                                target_date.year, target_date.month, target_date.day, 23, 59)
+                                target_date.year, target_date.month, target_date.day) + timedelta(days=1)
                         else:
                             observed_at_dt = datetime(
                                 target_date.year, target_date.month, target_date.day, hour, minute)
@@ -117,16 +148,24 @@ class CollectWindDataUsecase:
             except HtmlFetchingError as e:  # mainブランチのエラーハンドリング
                 self.logger.warning(
                     f"{target_date} のデータ取得をスキップします（HTML取得エラー）。理由: {e}")
+                all_wind_data_records.extend(
+                    self._create_skipped_day_records(target_date))
                 continue  # 次の日付の処理へ
             except HtmlParsingError as e:  # issue#21_01ブランチのエラーハンドリング
                 self.logger.error(
                     f"{target_date} のデータ解析をスキップします（HTML解析エラー）。理由: {e}")
+                all_wind_data_records.extend(
+                    self._create_skipped_day_records(target_date))
                 continue  # 次の日付の処理へ
             except Exception as e:  # その他の予期せぬエラー
                 self.logger.error(
                     f"{target_date} の処理中に予期せぬエラーが発生しました。処理をスキップします。理由: {e}", exc_info=True)
+                all_wind_data_records.extend(
+                    self._create_skipped_day_records(target_date))
                 continue  # 次の日付の処理へ
 
+        # 観測日時で昇順ソート
+        all_wind_data_records.sort(key=lambda r: r.observed_at)
         self.logger.info("全てのデータ取得・処理が完了しました。")
         # ファイル出力処理を追加
         saved_path = self.output_port.save(
