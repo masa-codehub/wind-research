@@ -30,4 +30,10 @@ class DailyWindReport:
 
     @property
     def records(self) -> List[WindDataRecord]:
+        """
+        Returns a copy of the internal list of wind data records.
+        
+        This ensures that the internal state of the `_records` list cannot be
+        modified directly by the caller.
+        """
         return list(self._records)
