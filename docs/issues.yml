@@ -163,9 +163,10 @@ github_issues_list:
         ユーザーストーリー US-004 を実装する。
         > システムとして、指定された観測地点と日付に基づき、気象庁ウェブサイトの正しいURLを動的に生成したい。それは、該当する風況データページへ確実にアクセスするためだ。
       implementation_tasks:
-        - "[ ] `(UseCase/Domain)` 入力パラメータ（都道府県番号, 地点番号, 年月日）から気象庁の風況データページのURLを生成する関数/メソッドを実装する"
-        - "[ ] `(Domain)` URL生成に必要なパラメータ（ベースURL、クエリパラメータのキー名など）の管理方法を決定する（定数、シンプルな設定クラスなど）"
-        - "[ ] `(Test)` 様々な入力値に対して正しいURLが生成されることを検証するユニットテストを作成する (TDD)"
+        - "[x] (Domain) 気象庁データページのURLテンプレート（ベースURL・クエリパラメータ名）を定数として定義し、パラメータ埋め込みでURLを生成するロジックを実装した"
+        - "[x] (Domain) URL生成用のインターフェース（例: JmaUrlGenerator）を抽象化し、Adapter層で具体実装を提供した"
+        - "[x] (Test) URL生成ロジックのユニットテストを tests/domain/test_jma_url_generator.py で実装し、様々な入力値・ゼロパディング・異常系を網羅した"
+        - "[x] (UseCase) 期間指定時は各日付ごとにURLを生成するロジックを実装し、ユースケース層で利用するようにした"
       acceptance_criteria:
         - "AC-004-01: 入力された都道府県番号、地点番号、年月日を基に、気象庁の風況データページのURLが正しく組み立てられる。"
         - "AC-004-02: 期間指定（例: 2024年1月1日から3日間）の場合、各日付に対応するURLが順次生成されるロジックの基盤となること。"
@@ -254,11 +255,11 @@ github_issues_list:
         ユーザーストーリー US-007 を実装する。
         > システムとして、抽出した文字列形式の風向データを、北を0度とする数値（角度）に変換したい。それは、データを分析しやすい形式にするためだ。
       implementation_tasks:
-        - "[ ] `(Domain)` `WindDirectionValue` 値オブジェクトを実装する (TASK-005_Issue の一部)"
-        - "[ ] `(Domain)` 16方位文字列と角度（北=0, 北北東=22.5...）、および「静穏」「///」と-1.0のマッピングルールを定義する (TASK-006_Issue と連携)"
-        - "[ ] `(Domain/UseCase)` `WindDataConverterService` に風向文字列を `WindDirectionValue` (数値)に変換するロジックを実装する (TASK-006_Issue と連携)"
-        - "[ ] `(UseCase)` 未定義の風向文字列の場合のエラー/警告ログ処理と-1.0へのフォールバックを実装する (TASK-004_Issue 依存)"
-        - "[ ] `(Test)` 様々な風向文字列（正常系、静穏、欠損、未定義）に対する変換ロジックのユニットテストを作成する (TDD)"
+        - "[x] `(Domain)` 不変な値オブジェクト `WindDirectionValue` を実装。変換ロジックを集約するファクトリメソッド `from_text` を持つ"
+        - "[x] `(Domain)` `WindDataConverterService` をリファクタリングし、`WindDirectionValue.from_text` に処理を委譲する形に変更"
+        - "[x] `(UseCase)` `CollectWindDataUsecase` の主処理フローに、データ変換と未定義値の警告ログ出力ロジックを統合"
+        - "[x] `(UseCase)` テスト容易性のため、データ取得部分を `_fetch_and_process_daily_data` メソッドとして分離（スタブ実装）"
+        - "[x] `(Test)` `monkeypatch` を利用してデータ取得部分をモック化し、`execute` メソッドのログ出力動作を検証する単体テストを実装"
       acceptance_criteria:
         - "AC-007-01: 16方位の風向文字列が、それぞれ定義済みの角度（float）に変換される。"
         - "AC-007-02: 風向文字列が「静穏」の場合、数値 `-1.0` に変換される。"
@@ -464,26 +465,28 @@ github_issues_list:
     - id: "TASK-002_Issue"
       title: "[TechnicalTask] HTML解析ライブラリの選定と導入 (TASK-002)"
       description: |
-        HTML解析に使用するPythonライブラリ（`pandas.read_html`, `Beautiful Soup` + `requests` + `lxml` 等）を調査・選定し、プロジェクトに導入する。
-        選定基準は、安定性・確実性を重視しつつ、迅速かつ簡単な実装が可能であること。
+        技術タスク TASK-002 を実施する。
+        > システムとして、気象庁HTMLデータの解析に最適なライブラリを選定・導入したい。それは、安定したデータ抽出と保守性の高い実装を実現するためだ。
       implementation_tasks:
-        - "[ ] `(Infrastructure/Adapter-Web)` 候補ライブラリの機能比較、サンプルHTMLでのパース精度・容易性の評価 (PoC)"
-        - "[ ] `(Infrastructure/Adapter-Web)` 選定したライブラリをプロジェクトの依存関係に追加"
-        - "[ ] `(Documentation)` 選定理由と基本的な使い方をドキュメント化（開発者向け）"
+        - "[x] `(Infrastructure/Adapter-Web)` 候補ライブラリ(`pandas.read_html`, `Beautiful Soup`)の機能比較、サンプルHTML(`tests/resources/sample_jma.html`)でのPoCを実施"
+        - "[x] `(Infrastructure/Adapter-Web)` PoC結果に基づき、`pandas` と `BeautifulSoup` を併用するアプローチを選定し、依存関係(`requirements.in`)に `pandas`, `lxml`, `beautifulsoup4` を追加"
+        - "[x] `(Documentation)` 選定理由、PoC結果、推奨される基本的な使い方を技術選定報告ドキュメントとして作成"
       acceptance_criteria:
-        - "対象の気象庁HTMLページ構造に対して、最も適切（安定性、メンテ性、実装速度のバランス）と思われるライブラリが選定され、導入されること。"
-        - "簡単なサンプルHTMLからのデータ抽出が選定ライブラリで可能であることが確認できること。"
-      related_requirement: "TASK-002 (参照元: 技術的制約)"
-      dependencies: null
-      milestone: "M2"
+        - "AC-TASK-002-01: HTML解析ライブラリの選定理由が明文化されている。"
+        - "AC-TASK-002-02: 選定したライブラリがプロジェクトに導入されている。"
+        - "AC-TASK-002-03: サンプルHTMLでのデータ抽出PoC結果が記録されている。"
+      related_requirement: "TASK-002 (参照元: FR-003-01, 技術的制約)"
+      dependencies: []
+      milestone: "M1"
       labels:
         - "type:technical-task"
-        - "epic:EPIC-02"
-        - "layer:adapter-web"
+        - "epic:EPIC-01"
+        - "feature:html-parsing"
         - "layer:infrastructure"
+        - "layer:adapter-web"
         - "priority:high"
-        - "needs-discussion"
-      notes: "[分割案あり] PoC (Proof of Concept) を行い、対象HTMLの構造に対して各ライブラリの適合性を評価するタスクを先行させてもよい。"
+        - "TDD"
+      notes: null
 
     - id: "TASK-003_Issue"
       title: "[TechnicalTask] Docker環境構築 (TASK-003)"
