@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta # timedelta を main ブランチから取り込み
+from datetime import datetime, timedelta  # timedelta を main ブランチから取り込み
 from src.domain.models.date import DateValue
 from src.domain.models.wind_data_record import WindDataRecord
 from src.domain.services.wind_data_converter import WindDataConverterService
@@ -29,13 +29,16 @@ class CollectWindDataUsecase:
     def __init__(self,
                  parser: IWindDataParser,
                  page_fetcher: IJmaPageFetcher,
-                 url_builder: IUrlBuilder, # main ブランチの url_builder を必須引数に変更
-                 logger_instance=logger): # logger を logger_instance にリネーム（標準のloggerと区別）
+                 url_builder: IUrlBuilder,  # main ブランチの url_builder を必須引数に変更
+                 logger=None):  # logger を明示的な引数に
+        if logger is None:
+            import logging
+            logger = logging.getLogger(__name__)
         self.converter = WindDataConverterService()
         self.parser = parser
         self.page_fetcher = page_fetcher
         self.url_builder = url_builder
-        self.logger = logger_instance # main.py から渡されるloggerを使用
+        self.logger = logger  # main.py から渡されるloggerを使用
 
     def execute(self, input_data: CollectWindDataInput):
         try:
@@ -96,7 +99,7 @@ class CollectWindDataUsecase:
                         else:
                             observed_at_dt = datetime(
                                 target_date.year, target_date.month, target_date.day, hour, minute)
-                        
+
                         record = WindDataRecord(
                             observed_at=observed_at_dt,
                             average_wind_direction=avg_wind_direction_vo,
@@ -105,20 +108,24 @@ class CollectWindDataUsecase:
                             max_wind_speed=max_wind_speed_vo
                         )
                         all_wind_data_records.append(record)
-                    except ValueError: # 時刻文字列のパース失敗など
-                        self.logger.error(f"対象日[{target_date}] 時刻[{raw_dto.time_str}]のパースに失敗したため、このレコードをスキップします。")
-                        continue # このDTOの処理をスキップ
+                    except ValueError:  # 時刻文字列のパース失敗など
+                        self.logger.error(
+                            f"対象日[{target_date}] 時刻[{raw_dto.time_str}]のパースに失敗したため、このレコードをスキップします。")
+                        continue  # このDTOの処理をスキップ
 
-            except HtmlFetchingError as e: # mainブランチのエラーハンドリング
-                self.logger.warning(f"{target_date} のデータ取得をスキップします（HTML取得エラー）。理由: {e}")
-                continue # 次の日付の処理へ
-            except HtmlParsingError as e: # issue#21_01ブランチのエラーハンドリング
-                self.logger.error(f"{target_date} のデータ解析をスキップします（HTML解析エラー）。理由: {e}")
-                continue # 次の日付の処理へ
-            except Exception as e: # その他の予期せぬエラー
-                self.logger.error(f"{target_date} の処理中に予期せぬエラーが発生しました。処理をスキップします。理由: {e}", exc_info=True)
-                continue # 次の日付の処理へ
-        
+            except HtmlFetchingError as e:  # mainブランチのエラーハンドリング
+                self.logger.warning(
+                    f"{target_date} のデータ取得をスキップします（HTML取得エラー）。理由: {e}")
+                continue  # 次の日付の処理へ
+            except HtmlParsingError as e:  # issue#21_01ブランチのエラーハンドリング
+                self.logger.error(
+                    f"{target_date} のデータ解析をスキップします（HTML解析エラー）。理由: {e}")
+                continue  # 次の日付の処理へ
+            except Exception as e:  # その他の予期せぬエラー
+                self.logger.error(
+                    f"{target_date} の処理中に予期せぬエラーが発生しました。処理をスキップします。理由: {e}", exc_info=True)
+                continue  # 次の日付の処理へ
+
         self.logger.info("全てのデータ取得・処理が完了しました。")
         return all_wind_data_records
 

@@ -4,7 +4,8 @@ from src.infrastructure.logger_setup import setup_logging
 from src.adapters.cui.argument_parser import parse_args
 from src.usecases.collect_wind_data_usecase import CollectWindDataUsecase, CollectWindDataInput
 from src.adapters.web.jma_html_parser import JmaHtmlParser
-from src.adapters.web.jma_page_fetcher_adapter import JmaPageFetcherAdapter # mainブランチの変更を取り込み
+from src.adapters.web.jma_page_fetcher_adapter import JmaPageFetcherAdapter  # mainブランチの変更
+from src.adapters.web.jma_url_builder import JmaUrlBuilder  # 追加: JmaUrlBuilderのインポート
 
 # issue#21_01ブランチの sys.path.insert は、
 # プロジェクト構造とPYTHONPATHが適切に設定されていれば通常不要なため、
@@ -13,8 +14,8 @@ from src.adapters.web.jma_page_fetcher_adapter import JmaPageFetcherAdapter # ma
 
 def main():
     """アプリケーションのメインエントリーポイント"""
-    setup_logging() # issue#21_01ブランチの変更
-    logger = logging.getLogger(__name__) # issue#21_01ブランチの変更
+    setup_logging()  # issue#21_01ブランチの変更
+    logger = logging.getLogger(__name__)  # issue#21_01ブランチの変更
     try:
         # 引数を解析
         args = parse_args()
@@ -29,8 +30,9 @@ def main():
 
         # Usecaseを実行
         # 依存性を注入
-        html_parser = JmaHtmlParser() # issue#21_01ブランチの変更
-        page_fetcher = JmaPageFetcherAdapter() # mainブランチの変更
+        html_parser = JmaHtmlParser()  # issue#21_01ブランチの変更
+        page_fetcher = JmaPageFetcherAdapter()  # mainブランチの変更
+        url_builder = JmaUrlBuilder()  # 追加: url_builderのインスタンス生成
 
         # CollectWindDataUsecase のコンストラクタに合わせて引数を設定
         # issue#21_01 では (parser, logger), main では (page_fetcher)
@@ -41,12 +43,13 @@ def main():
         usecase = CollectWindDataUsecase(
             parser=html_parser,
             logger=logger,
-            page_fetcher=page_fetcher # page_fetcher を追加
+            page_fetcher=page_fetcher,
+            url_builder=url_builder
         )
         usecase.execute(input_dto)
 
     except ValueError as e:
-        logger.error(f"パラメータが不正です: {e}") # issue#21_01ブランチの変更
+        logger.error(f"パラメータが不正です: {e}")  # issue#21_01ブランチの変更
         print(f"エラー: パラメータが不正です。\n{e}", file=sys.stderr)
         sys.exit(1)
     except SystemExit as e:
