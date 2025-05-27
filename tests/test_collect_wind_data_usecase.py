@@ -20,10 +20,13 @@ def test_execute_valid(capsys):
     dummy_parser = Mock()
     dummy_parser.parse.return_value = []
     dummy_logger = Mock()
-    usecase = CollectWindDataUsecase(parser=dummy_parser, logger=dummy_logger)
+    dummy_url_builder = Mock()
+    dummy_page_fetcher = Mock()
+    usecase = CollectWindDataUsecase(parser=dummy_parser, logger=dummy_logger,
+                                     page_fetcher=dummy_page_fetcher, url_builder=dummy_url_builder)
     usecase.execute(input_data)
     dummy_logger.info.assert_called()
-    assert "データ収集中..." in dummy_logger.info.call_args[0][0]
+    assert "全てのデータ取得・処理が完了しました。" in dummy_logger.info.call_args[0][0]
 
 
 def test_execute_invalid_days():
@@ -35,7 +38,10 @@ def test_execute_invalid_days():
     )
     dummy_parser = Mock()
     dummy_logger = Mock()
-    usecase = CollectWindDataUsecase(parser=dummy_parser, logger=dummy_logger)
+    dummy_url_builder = Mock()
+    dummy_page_fetcher = Mock()
+    usecase = CollectWindDataUsecase(parser=dummy_parser, logger=dummy_logger,
+                                     page_fetcher=dummy_page_fetcher, url_builder=dummy_url_builder)
     with pytest.raises(ValueError) as e:
         usecase.execute(input_data)
     assert "取得期間" in str(e.value)
@@ -70,7 +76,10 @@ def test_execute_logs_warning_for_unknown_direction():
         def info(self, msg):
             pass
     logger_mock = LoggerMock()
-    usecase = CollectWindDataUsecase(parser=dummy_parser, logger=logger_mock)
+    dummy_url_builder = Mock()
+    dummy_page_fetcher = Mock()
+    usecase = CollectWindDataUsecase(parser=dummy_parser, logger=logger_mock,
+                                     page_fetcher=dummy_page_fetcher, url_builder=dummy_url_builder)
     from datetime import date
     usecase._fetch_and_process_daily_data = lambda _: [
         (date(2025, 5, 26), "dummy_html")
@@ -85,6 +94,8 @@ def test_from_html_missing_column():
     mock_parser = Mock()
     mock_parser.parse.side_effect = HtmlParsingError("不足列: 風向")
     mock_logger = Mock()
+    dummy_url_builder = Mock()
+    dummy_page_fetcher = Mock()
     input_data = CollectWindDataInput(
         prefecture_no="01",
         block_no="001",
@@ -92,7 +103,8 @@ def test_from_html_missing_column():
         days=1
     )
     from datetime import date
-    usecase = CollectWindDataUsecase(parser=mock_parser, logger=mock_logger)
+    usecase = CollectWindDataUsecase(parser=mock_parser, logger=mock_logger,
+                                     page_fetcher=dummy_page_fetcher, url_builder=dummy_url_builder)
     usecase._fetch_and_process_daily_data = lambda _: [
         (date(2025, 5, 26), "dummy_html")
     ]
