@@ -9,5 +9,7 @@ def parse_args(args=None):
     parser.add_argument("--start_date", required=True,
                         help="開始年月日 (YYYY-MM-DD)")
     parser.add_argument("--days", type=int, required=True, help="取得日数")
+    parser.add_argument("--output", required=False,
+                        help="出力CSVファイルのパス（省略時はデフォルトのパスと名前で保存）")
 
     return parser.parse_args(args)
