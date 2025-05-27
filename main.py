@@ -1,8 +1,11 @@
-import sys
-# 引数解析部をインポート
-from src.adapters.cui.argument_parser import parse_args
-# UsecaseとInput DTOをインポート
+from src.adapters.web.jma_page_fetcher_adapter import JmaPageFetcherAdapter
 from src.usecases.collect_wind_data_usecase import CollectWindDataUsecase, CollectWindDataInput
+from src.adapters.cui.argument_parser import parse_args
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+# 引数解析部をインポート
+# UsecaseとInput DTOをインポート
 
 
 def main():
@@ -20,7 +23,8 @@ def main():
         )
 
         # Usecaseを実行
-        usecase = CollectWindDataUsecase()
+        page_fetcher = JmaPageFetcherAdapter()
+        usecase = CollectWindDataUsecase(page_fetcher=page_fetcher)
         usecase.execute(input_dto)
 
     except ValueError as e:
