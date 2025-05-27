@@ -191,11 +191,13 @@ github_issues_list:
         ユーザーストーリー US-005 を実装する。
         > システムとして、生成したURLから気象庁ウェブサイトのHTMLコンテンツを、指定された間隔を空けて取得したい。それは、風況データを抽出し、かつサイトに負荷をかけないためだ。
       implementation_tasks:
-        - "[ ] `(Adapter-Web)` 指定されたURLからHTTP GETリクエストを送信し、HTMLコンテンツを取得する機能を実装する（TASK-002で選定したライブラリを使用）"
-        - "[ ] `(Infrastructure)` リクエスト送信前に指定されたデータ取得間隔（デフォルト5秒、下限3秒）の待機処理を実装する"
-        - "[ ] `(Adapter-Web/UseCase)` HTML取得時のネットワークエラーやHTTPエラー（4xx, 5xx）をハンドリングし、エラーをログに記録後、該当日の処理をスキップするロジックを実装する (TASK-004_Issue 依存)"
-        - "[ ] `(Test)` HTML取得機能（成功ケース、エラーケース）のユニットテストを作成する (TDD、外部アクセスはモック化)"
-        - "[ ] `(Test)` リクエスト間隔制御のテスト（ログや時間計測で確認）"
+        - "[x] `(Port)` `src/usecases/ports/jma_page_fetcher_port.py` に、HTML取得インターフェース `IJmaPageFetcher` とカスタム例外 `HtmlFetchingError` を定義した。"
+        - "[x] `(Adapter-Web)` `src/adapters/web/jma_page_fetcher_adapter.py` に、`IJmaPageFetcher`を実装する `JmaPageFetcherAdapter` を作成した。このアダプタは `requests.Session` を使用し、`RequestThrottler` によるアクセス間隔制御、`USER_AGENT` の設定、エラー時の `HtmlFetchingError`送出とロギングを行う。"
+        - "[x] `(UseCase)` `src/usecases/collect_wind_data_usecase.py` のコンストラクタを修正し、`IJmaPageFetcher` と `IUrlBuilder` を依存性注入で受け取るようにした。`CollectWindDataInput` DTO に `interval_sec` フィールド（デフォルト5.0秒）を追加した。"
+        - "[x] `(UseCase)` `CollectWindDataUsecase.execute` メソッド内で、注入された `page_fetcher` を使用してHTMLコンテンツを取得し、`HtmlFetchingError` 発生時には警告ログを出力して該当日の処理をスキップするロジックを実装した。"
+        - "[x] `(Adapter-CUI)` `main.py` を修正し、`JmaPageFetcherAdapter` と `JmaUrlBuilder` のインスタンスを生成して `CollectWindDataUsecase` に注入するようにした。"
+        - "[x] `(Test)` `tests/adapters/web/test_jma_page_fetcher_adapter.py` に、`JmaPageFetcherAdapter` の単体テスト（成功、HTTPエラー、ネットワークエラー、User-Agent、スロットリング呼び出し）を実装した。"
+        - "[x] `(Test)` `tests/test_collect_wind_data_usecase_port.py` の `CollectWindDataUsecase` の単体テストを更新・改善し、モック化したポート経由でのHTML取得成功時・失敗時の処理フロー（スキップ、ログ記録）を検証するようにした。"
       acceptance_criteria:
         - "AC-005-01: 指定されたURLに対してHTTP GETリクエストが送信され、HTMLコンテンツが取得できる。"
         - "AC-005-02: 連続して複数日のデータを取得する際、各リクエストの送信前に、TASK-ACCESS-POLICY-01で定義されたドメイン別の最小アクセス間隔を遵守した待機時間が入る。"
