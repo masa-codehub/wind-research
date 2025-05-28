@@ -27,6 +27,10 @@ class CollectWindDataInput:
     interval_sec: float = 5.0  # main ブランチのデフォルト値を取り込み
     output_path: str | None = None  # ファイル出力パスを追加
 
+    def __post_init__(self):
+        if self.interval_sec < 3:
+            raise ValueError("interval_sec 3 秒以上である必要があります。")
+
 
 class CollectWindDataUsecase:
     # 両方のブランチの依存性をマージ

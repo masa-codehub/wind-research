@@ -2,6 +2,7 @@ from src.usecases.collect_wind_data_usecase import CollectWindDataUsecase, Colle
 import pytest
 import sys
 import os
+from datetime import datetime
 from unittest.mock import patch, MagicMock, Mock
 from src.usecases.ports.jma_page_fetcher_port import IJmaPageFetcher, HtmlFetchingError
 from src.usecases.ports.wind_data_parser_port import IWindDataParser, HtmlParsingError
@@ -220,3 +221,17 @@ def test_execute_with_one_day_success_and_one_day_fetch_error():
     assert called_with_records[0].average_wind_speed.value_mps == 1.0 # 変換後の値を確認
 
     assert saved_file_path == "dummy/output_mixed.csv"
+
+
+def test_interval_sec_below_minimum_raises_error():
+    """ interval_sec が3秒未満の場合にValueErrorが発生することを確認する。"""
+    start = datetime.now()
+
+    with pytest.raises(ValueError, match="interval_sec 3 秒以上である必要があります。"):
+        CollectWindDataInput(
+            prefecture_no="01",
+            block_no="001",
+            start_date_str=start.strftime("%Y-%m-%d"),
+            days=1,
+            interval_sec=2.0,  # 3秒未満の値
+        )
