@@ -899,3 +899,78 @@ github_issues_list:
         - "[x] 上記指針が開発チームに周知徹底され、開発ドキュメントとしてマージされている"
       notes: |
         JMAアクセス指針（User-Agent: WindResearcher/1.0, data.jma.go.jp:8秒, www.jma.go.jp:3秒, エラー時は全体停止）を策定・文書化し、関連成果物へ反映済み。チームレビュー・承認も完了。本Issueはクローズ。
+
+    - id: BUG-001 # (仮のID、実際のIDはGitHubで採番)
+      title: "[Bug][Adapter-Web] JMAデータ取得URLの不備とそれに伴うHTML解析エラー"
+      description: |
+        実際にCUIツールを実行したところ、特定のパラメータ（prec_no=51, block_no=1638）で、期待されるJMAのデータページとは異なるURLにアクセスしており、その結果HTML解析エラーが発生しデータが取得できない。
+
+        **再現時のエラーログ:**
+        ```
+        root@2f539442aaa6:/app# python main.py --prefecture_no 51 --block_no 1638 --start_date 2024-01-01 --days 1
+        2025-05-28 09:37:24,725 - __main__ - INFO - データ収集中...: 51, 1638, from 2024-01-01 for 1 days, interval: 5.0s
+        2025-05-28 09:37:24,726 - __main__ - INFO - 2024-01-01 のデータ取得処理を開始します。URL: [https://www.data.jma.go.jp/stats/etrn/view/10min_s1.php?prec_no=51&block_no=1638&year=2024&month=01&day=01&view=p1](https://www.data.jma.go.jp/stats/etrn/view/10min_s1.php?prec_no=51&block_no=1638&year=2024&month=01&day=01&view=p1)
+        2025-05-28 09:37:24,727 - src.adapters.web.jma_page_fetcher_adapter - INFO - Fetching HTML from: [https://www.data.jma.go.jp/stats/etrn/view/10min_s1.php?prec_no=51&block_no=1638&year=2024&month=01&day=01&view=p1](https://www.data.jma.go.jp/stats/etrn/view/10min_s1.php?prec_no=51&block_no=1638&year=2024&month=01&day=01&view=p1)
+        2025-05-28 09:37:24,807 - __main__ - INFO - 2024-01-01 のHTML取得成功。
+        2025-05-28 09:37:24,809 - __main__ - ERROR - 2024-01-01 のデータ解析をスキップします（HTML解析エラー）。理由: 目的のテーブル(id='tablefix1')が見つかりません。
+        2025-05-28 09:37:24,811 - __main__ - INFO - 全てのデータ取得・処理が完了しました。
+        2025-05-28 09:37:24,818 - __main__ - INFO - ファイル出力完了: wind_data_20240101.csv
+        ```
+
+        **ユーザー指摘の正しいと思われるURL:**
+        `https://www.data.jma.go.jp/stats/etrn/view/10min_a1.php?prec_no=51&block_no=1638&year=2024&month=1&day=1&view=p1`
+
+      problem_analysis: |
+        - `JmaUrlBuilder` が `JMA_10MIN_DATA_URL_TEMPLATE` に基づいて生成しているURLが、特定のケース（または全てのケース）で正しくない可能性がある。
+        - 現在のテンプレートでは、パスが `10min_s1.php` で、月日がゼロパディング (`month={month:02d}`, `day={day:02d}`) される。
+        - 正しいURLではパスが `10min_a1.php` で、月日のゼロパディングがないように見える。
+        - 結果として、誤ったURLにアクセスし、期待するHTML構造（`id='tablefix1'` を含むテーブル）が得られず、`JmaHtmlParser` がエラーを送出している。
+
+      hypotheses:
+        - "仮説1: `JMA_10MIN_DATA_URL_TEMPLATE` の定義が、全ての観測地点・日付に対して普遍的に正しいわけではなく、特定のパターン（例: `_a1.php` でゼロパディングなし）が存在する。"
+        - "仮説2: 複数のURLパターンが存在し、観測地点や日付によって使い分ける必要があるかもしれない。"
+
+      implementation_tasks:
+        - section: "調査・検証"
+          tasks:
+            - description: "ユーザー指摘のURL (`.../10min_a1.php?...month=1&day=1...`) にブラウザでアクセスし、データテーブル (`id='tablefix1'` またはそれに類するもの) が存在するか、HTML構造が `sample_jma.html` と比較してどうなっているかを確認する。"
+              completed: false
+            - description: "もし上記URLでデータが取得できる場合、そのHTMLを `tests/resources/sample_jma_a1_format_51_1638.html` のような名前で保存する。"
+              completed: false
+            - description: "他の観測地点や日付でも同様に `_s1.php` と `_a1.php` (およびゼロパディングの有無) のパターンを試し、URL形式の法則性や、どちらがより一般的に正しい形式なのかを調査する。"
+              completed: false
+        - section: "実装 (`adapter-web` レイヤー)"
+          tasks:
+            - description: "(調査結果に基づき) `src/adapters/web/jma_config.py` の `JMA_10MIN_DATA_URL_TEMPLATE` を、より正しい、またはより汎用的な形式に修正する。必要であれば、URL生成ロジック (`JmaUrlBuilder`) 自体を修正し、複数のパターンに対応できるようにする。"
+              completed: false
+            - description: "上記のURLテンプレート/ロジック修正後、`JmaHtmlParser` の修正が必要か再検討する。正しいURLから取得したHTMLに `id='tablefix1'` が存在すれば、当初のパーサー修正（テーブルなしの場合に空リストを返す）は不要になる可能性がある。しかし、データが存在しない場合（正しいURLだがデータなしページ）のために、そのハンドリングは依然として有効かもしれない。"
+              completed: false
+        - section: "テスト (`adapter-web` レイヤー)"
+          tasks:
+            - description: "(TDD) `src/adapters/web/test_jma_url_builder.py` のテストケースを、修正されたURL生成ロジック/テンプレートに合わせて更新・追加する。正しいURLが生成されることを検証する。" #
+              completed: false
+            - description: "(TDD) `src/adapters/web/test_jma_html_parser.py` のテストケースを見直す。もしURL修正によって常に正しいHTMLが取得できるようになり、`id='tablefix1'` が存在しないケースが「データなし」ページの場合のみに限定されるなら、それに応じたテスト（例: `test_parse_html_with_no_tablefix1_returns_empty_list`）が適切であることを確認する。" #
+              completed: false
+
+      acceptance_criteria:
+        - "再現手順のコマンドを実行した際、正しいと判断されたJMAのURLにアクセスし、データが取得できる場合はHTML解析エラーが発生せず、データが正常に処理されること。"
+        - "正しいURLにアクセスしてもデータが存在しない場合（例: 気象庁側でデータ提供がない日）、アプリケーションはエラー終了せず、その日のデータは0件として処理され、`INFO` または `WARN` ログが出力されること。"
+        - "最終的に生成されるCSVファイルが、取得できたデータに基づいて正しく作成される（データなしの場合はヘッダーのみ、または `No data to save.`）。"
+        - "`test_jma_url_builder.py` の関連テストがすべて成功すること。"
+        - "`test_jma_html_parser.py` の関連テストがすべて成功すること。"
+
+      milestone: "MVPリリース"
+      labels:
+        - "type:bug"
+        - "layer:adapter-web"
+        - "feature:html-parsing"
+        - "feature:url-generation" # 新規追加または既存のものを適用
+        - "priority:high"
+        - "TDD"
+        - "needs-investigation" # 新規追加または既存のものを適用
+      dependencies: []
+      related_requirement: "FR-002-01 (URL動的生成), FR-003-04, FR-003-05 (HTML解析エラー時の処理)" #
+      notes: |
+        このエラーの根本原因は、HTMLパーサーだけでなく、その前段のURL生成ロジックにある可能性が高い。
+        JMAサイトの正しいURL形式を特定し、`JMA_10MIN_DATA_URL_TEMPLATE` および `JmaUrlBuilder` を修正することが本Issueの主眼となる。
+        その上で、`JmaHtmlParser` が「データなし」ページ（正しいURLだがテーブルがないケース）を適切に扱えることも保証する。

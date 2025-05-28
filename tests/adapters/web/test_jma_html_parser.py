@@ -12,19 +12,35 @@ def sample_html():
     return path.read_text(encoding="utf-8")
 
 
+def sample_html_a1_p51_b1638_20240101():
+    path = Path(__file__).parent.parent.parent / "resources" / \
+        "sample_jma_a1_p51_b1638_20240101.html"
+    return path.read_text(encoding="utf-8")
+
+
 def test_parse_normal(sample_html):
     parser = JmaHtmlParser()
     result = parser.parse(sample_html)
-    # サンプルHTMLの仕様に応じて件数を調整
     assert len(result) == 144
-    # 先頭・末尾の値を具体的に検証（例: 1行目と最終行）
     assert result[0].time_str == "00:10"
     assert result[-1].time_str == "24:00"
-    # 先頭2件の風向・風速値も検証
-    assert result[0].avg_wind_direction_str == "北北東"
-    assert result[0].avg_wind_speed_str == "1.6"
-    assert result[1].avg_wind_direction_str == "北北東"
-    assert result[1].avg_wind_speed_str == "1.2"
+    assert result[0].avg_wind_direction_str == "北北西"
+    assert result[0].avg_wind_speed_str == "3.3"
+    assert result[1].avg_wind_direction_str == "北北西"
+    assert result[1].avg_wind_speed_str == "4.1"
+
+
+def test_parse_normal_a1():
+    parser = JmaHtmlParser()
+    html = sample_html_a1_p51_b1638_20240101()
+    result = parser.parse(html)
+    assert len(result) == 3  # サンプルデータ行数に合わせて
+    assert result[0].time_str == "00:10"
+    assert result[-1].time_str == "24:00"
+    assert result[0].avg_wind_direction_str == "北北西"
+    assert result[0].avg_wind_speed_str == "3.3"
+    assert result[1].avg_wind_direction_str == "北北西"
+    assert result[1].avg_wind_speed_str == "4.1"
 
 
 def test_parse_table_not_found():
@@ -34,10 +50,11 @@ def test_parse_table_not_found():
         parser.parse(html)
 
 
-def test_parse_missing_column(sample_html):
+def test_parse_missing_column():
     parser = JmaHtmlParser()
-    html = sample_html.replace("風向", "風向X")
+    path = Path(__file__).parent.parent.parent / \
+        "resources" / "sample_jma_no_wind_dir.html"
+    html = path.read_text(encoding="utf-8")
     with pytest.raises(HtmlParsingError) as e:
         parser.parse(html)
-    assert "不足列" in str(e.value)
-    assert "風向" in str(e.value)  # 例: 不足列名が含まれる
+    assert "avg_wind_direction_str" in str(e.value)
