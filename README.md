@@ -1,4 +1,3 @@
-\
 <!-- filepath: /app/README.md -->
 # wind-research
 
@@ -51,6 +50,15 @@
      docker compose exec wind-research bash
      ```
    - コンテナ内で `python main.py ...` の形式でコマンドを実行してください。
+   - **VS CodeのDev Container機能を利用する場合**：
+     - `.devcontainer/devcontainer.json` の `service` プロパティが `wind-research` になっていることを確認し、必要に応じて修正してください。
+     - 例：
+       ```json
+       {
+         "service": "wind-research",
+         // ...その他の設定...
+       }
+       ```
 
 - 詳細なコマンド例やオプションは、下記「使い方」セクションを参照してください。
 
