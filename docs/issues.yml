@@ -163,10 +163,10 @@ github_issues_list:
         ユーザーストーリー US-004 を実装する。
         > システムとして、指定された観測地点と日付に基づき、気象庁ウェブサイトの正しいURLを動的に生成したい。それは、該当する風況データページへ確実にアクセスするためだ。
       implementation_tasks:
-        - "[x] (Domain) 気象庁データページのURLテンプレート（ベースURL・クエリパラメータ名）を定数として定義し、パラメータ埋め込みでURLを生成するロジックを実装した"
-        - "[x] (Domain) URL生成用のインターフェース（例: JmaUrlGenerator）を抽象化し、Adapter層で具体実装を提供した"
-        - "[x] (Test) URL生成ロジックのユニットテストを tests/domain/test_jma_url_generator.py で実装し、様々な入力値・ゼロパディング・異常系を網羅した"
-        - "[x] (UseCase) 期間指定時は各日付ごとにURLを生成するロジックを実装し、ユースケース層で利用するようにした"
+        - "[x] `(Adapter-Web)` `src/adapters/web/jma_config.py` の `JMA_10MIN_DATA_URL_TEMPLATE` を修正し、パスを `10min_a1.php` に変更、月日パラメータのゼロパディング指定を削除した。" # BUG-001対応
+        - "[x] `(Adapter-Web)` `src/adapters/web/jma_url_builder.py` が修正されたテンプレートを使用してURLを生成することを確認した。" # BUG-001対応 (コード変更は jma_config.py のみ)
+        - "[x] `(Test)` `tests/adapters/web/test_jma_url_builder.py` にて、修正されたURLテンプレートに基づき、特定のパラメータ（prec_no=51, block_no=1638など）で正しいURL (`10min_a1.php`形式、ゼロパディングなし）が生成されることを検証するテストケースを更新・追加し、成功を確認した。" # BUG-001対応
+        - "[x] `(UseCase)` 期間指定時は各日付ごとにURLを生成する既存ロジックが、修正されたURL生成メカニズムを利用することを確認した。"
       acceptance_criteria:
         - "AC-004-01: 入力された都道府県番号、地点番号、年月日を基に、気象庁の風況データページのURLが正しく組み立てられる。"
         - "AC-004-02: 期間指定（例: 2024年1月1日から3日間）の場合、各日付に対応するURLが順次生成されるロジックの基盤となること。"
@@ -935,7 +935,7 @@ github_issues_list:
           tasks:
             - description: "ユーザー指摘のURL (`.../10min_a1.php?...month=1&day=1...`) にブラウザでアクセスし、データテーブル (`id='tablefix1'` またはそれに類するもの) が存在するか、HTML構造が `sample_jma.html` と比較してどうなっているかを確認する。"
               completed: false
-            - description: "もし上記URLでデータが取得できる場合、そのHTMLを `tests/resources/sample_jma_a1_format_51_1638.html` のような名前で保存する。"
+            - description: "もし上記URLでデータが取得できる場合、そのHTMLを `tests/resources/sample_jma_a1_format_51_1638_20240101.html` のような名前で保存する。"
               completed: false
             - description: "他の観測地点や日付でも同様に `_s1.php` と `_a1.php` (およびゼロパディングの有無) のパターンを試し、URL形式の法則性や、どちらがより一般的に正しい形式なのかを調査する。"
               completed: false
