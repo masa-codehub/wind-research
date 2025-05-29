@@ -1,4 +1,3 @@
-\
 <!-- filepath: /app/README.md -->
 # wind-research
 
