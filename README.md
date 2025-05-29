@@ -45,7 +45,7 @@
      ```
 
 5. **コンテナへのアクセスとツール実行**
-   - wind-researchディレクトリで wind-research コンテナにシェルで入ります。
+   - ルートディレクトリで wind-research コンテナにシェルで入ります。
      ```bash
      docker compose exec wind-research bash
      ```
