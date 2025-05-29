@@ -165,17 +165,17 @@
     - "FR-001-04: ヘルプメッセージ表示オプション (`--help`) を提供すること。"
     - "FR-001-05: パラメータの値がドメインルールに違反する場合（例: `start_date` のフォーマットが `YYYY-MM-DD` でない、`days` が1未満など）、アプリケーション固有のエラーメッセージ（`パラメータが不正です`等）を標準エラー出力に表示し、終了コード `1` でプロセスを終了すること。"
   FR_002_データ取得処理:
-    - "FR-002-01: (変更なし - US-004の責務)"
+    - "FR-002-01: `IUrlBuilder` ポートを介して、`JmaUrlBuilder` が気象庁データページのURLを動的に生成すること。URLテンプレートは `src/adapters/web/jma_config.py` の `JMA_10MIN_DATA_URL_TEMPLATE` で定義され、現在は `https://www.data.jma.go.jp/stats/etrn/view/10min_a1.php?prec_no={prefecture_no}&block_no={block_no}&year={year}&month={month}&day={day}&view=p1` 形式（月日はゼロパディングなし）を基本とする。" # BUG-001対応により具体化
     - "FR-002-02: ユースケース (`CollectWindDataUsecase`) は、`IJmaPageFetcher`ポートを介して、指定されたURLからHTMLコンテンツを取得すること。取得処理は `JmaPageFetcherAdapter` が担当する。"
     - "FR-002-03: `JmaPageFetcherAdapter` は、`docs/COMPLIANCE.md` および `src/app/adapters/web/config.py` の `ACCESS_POLICIES` で定義されたドメイン別の最小アクセス間隔と、入力DTO (`CollectWindDataInput.interval_sec`、デフォルト5.0秒) で渡されたユーザー指定間隔のうち、より長い方を適用して待機処理を行うこと。この処理は `RequestThrottler` を利用する。"
     - "FR-002-04: `JmaPageFetcherAdapter` は、HTML取得時のネットワークエラー（例: `requests.exceptions.ConnectionError`）やHTTPエラーステータスコード（4xx, 5xx）を検知した場合、`HtmlFetchingError` を送出すること。送出前にエラー詳細（対象URL、例外情報、スタックトレースを含む）を `ERROR` レベルでログに記録すること。`CollectWindDataUsecase` は、この `HtmlFetchingError` を捕捉し、`WARNING` レベルで該当日の処理をスキップする旨のログを記録し、リトライせずに次の日の処理へ進むこと。"
     - "(新規) FR-002-05: `JmaPageFetcherAdapter` は、HTTPリクエスト時に `src/infrastructure/config.py` で定義された `USER_AGENT` をリクエストヘッダーに含めること。"
     - "(新規) FR-002-06: `JmaPageFetcherAdapter` は、HTTP GETリクエスト時に適切なタイムアウト値（例: 30秒）を設定すること。"
   FR_003_データ抽出処理:
-    - "FR-003-01: 取得したHTMLコンテンツから、`id='tablefix1'`のテーブル要素を`BeautifulSoup`で特定し、`pandas.read_html` (header=1オプション使用) を用いて10分毎の気象データをDataFrameとして抽出すること。"
-    - "FR-003-02: DataFrameから、観測時刻、平均風向（文字列）、平均風速(m/s文字列)、最大瞬間風速(m/s文字列)、最大瞬間風速の風向（文字列）を抽出し、これらを保持する`RawWindDataDto`オブジェクトのリストに変換すること。"
-    - "FR-003-03: データ抽出時、欠損値（例: `--`, `///`）はNaNに変換せず、元の文字列のまま`RawWindDataDto`に格納すること (`na_values=[], keep_default_na=False` オプションを利用)。"
-    - "FR-003-04: 目的のテーブル(`id='tablefix1'`)が見つからない場合、または定義された必須列（時刻、平均風向、平均風速、最大瞬間風速、最大瞬間風速にリネーム後の列）がDataFrameに存在しない場合、`HtmlParsingError`を送出すること。"
+    - "FR-003-01: 取得したHTMLコンテンツから、`id='tablefix1'`のテーブル要素を`BeautifulSoup`で特定し、`pandas.read_html` を用いて10分毎の気象データをDataFrameとして抽出すること。`pandas` のヘッダー自動判定を利用し、抽出後にMultiIndexカラムのフラット化、列名のリネーム (`rename_map` 使用)、時刻形式 (`HH:MM`) に基づくデータ行のフィルタリングを行う。" # BUG-001対応により具体化
+    - "FR-003-02: DataFrameから、観測時刻、平均風向（文字列）、平均風速(m/s文字列)、最大瞬間風速(m/s文字列)、最大瞬間風速の風向（文字列）を抽出し、これらを保持する`RawWindDataDto`オブジェクトのリストに変換すること。最大瞬間風速の風向列が存在しない場合は、平均風向の値で補完する。" # BUG-001対応により補完ロジックを明記
+    - "FR-003-03: データ抽出時、欠損値（例: `--`, `///`）はNaNに変換せず、元の文字列のまま`RawWindDataDto`に格納すること (`na_values=[], keep_default_na=False` オプションを利用)。" # 変更なし
+    - "FR-003-04: 目的のテーブル(`id='tablefix1'`)が見つからない場合、DataFrameが取得できない場合、または定義された必須列（`time_str`, `avg_wind_direction_str`, `avg_wind_speed_str`, `max_wind_direction_str`, `max_wind_speed_str`）がリネームおよびデータ行フィルタリング後のDataFrameに存在しない場合、`HtmlParsingError`を送出すること。" # BUG-001対応により具体化
     - "FR-003-05: ユースケース層(`CollectWindDataUsecase`)は、`HtmlParsingError`を捕捉した場合、エラー情報をログに記録し、該当日のデータ処理をスキップして次の日の処理を継続すること。"
     - "(新規) FR-003-06: ユースケース層(`CollectWindDataUsecase`)は、`RawWindDataDto`の時刻文字列が不正で`datetime`オブジェクトに変換できない場合、エラー情報をログに記録し、該当レコードの処理をスキップすること。"
   FR_004_データ変換処理:
